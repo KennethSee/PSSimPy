@@ -1,0 +1,1 @@
+TRANSACTION_STATUS_CODES = {'Open': 0, 'Modified': 1, 'Success': 2, 'Failed': -1}

@@ -1,11 +1,20 @@
-
+from .account import Account
+from ..utils.constants import TRANSACTION_STATUS_CODES
 
 class Transaction:
 
-    def __init__(self, sender_account_id: str, receiver_account_id: str, **kwargs):
-        self.sender_account_id = sender_account_id
-        self.receiver_account_id = receiver_account_id
+    def __init__(self, sender_account: Account, receipient_account: Account, amount: float, **kwargs):
+        self.sender_account = sender_account
+        self.receipient_account = receipient_account
+        self.amount = amount
+        self.status_code = TRANSACTION_STATUS_CODES['Open']
         
         # Use the kwargs to store additional user-defined attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    def update_transaction_status(self, status: str):
+        try:
+            self.status_code = TRANSACTION_STATUS_CODES[status]
+        except KeyError:
+            print(f"Invalid status: '{status}'. Please provide a valid transaction status.")
