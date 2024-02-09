@@ -1,7 +1,7 @@
 # PSSimPy
 Payment and Settlement Systems Simulator Python Library
 
-## Get Startd
+## Getting Started
 ```bash
 pip install PSSimPy
 ```
