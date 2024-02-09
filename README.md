@@ -10,9 +10,12 @@ pip install PSSimPy
 
 ```python
 from PSSimPy import BasicSim
+from PSSimPy.settlement_mechanisms import SimpleRTGS
+from PSSimPy.queues import DirectQueue
+from PSSimPy.credit_facilities import SimplePriced
 
 # initialize simulator
-sim = BasicSim(open_time, close_time, num_days, settlement_mechanism='simple_RTGS', queue='direct', credit_facility='simple_priced')
+sim = BasicSim(open_time, close_time, num_days, settlement_mechanism=SimpleRTGS, queue=DirectQueue, credit_facility=SimplePriced)
 # load accounts
 # accounts_dict is a nested dictionary where the keys are the account IDs. Within the values of each account ID is a dictionary that has at least the following keys: owner, begin_balance.
 sim.load_accounts(accounts_dict)
