@@ -1,7 +1,7 @@
 from .abstract_settlement_mechansim import AbstractSettlementMechanism
 from ..core.transaction import Transaction
 
-class SimpleRTGSSettlement(AbstractSettlementMechanism):
+class SimpleRTGS(AbstractSettlementMechanism):
 
     def settle_transaction(self, transaction: Transaction):
         sender = transaction.sender_account
