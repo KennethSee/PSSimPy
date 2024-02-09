@@ -1,5 +1,4 @@
-# PSSimPy
-Payment and Settlement Systems Simulator Python Library
+# PSSimPy: A Payment and Settlement Systems Simulator Python Library
 
 ## Getting Started
 ```bash
