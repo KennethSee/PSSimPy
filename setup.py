@@ -7,8 +7,8 @@ with open('requirements.txt') as f:
 setup(
     name='PSSimPy',
     version='0.1.0',
-    author='Kenneth See',
-    author_email='see.k@u.nus.edu',
+    author='Kenneth See, Hanzholah Shobri',
+    author_email='see.k@u.nus.edu, hanzhshobri@gmail.com',
     packages=find_packages(),
     description='A simulator for Large Value Payment Systems',
     long_description=open('README.md').read(),
