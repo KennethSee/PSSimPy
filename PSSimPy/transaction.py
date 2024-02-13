@@ -1,5 +1,5 @@
-from .account import Account
-from ..utils.constants import TRANSACTION_STATUS_CODES
+from PSSimPy.account import Account
+from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES
 
 class Transaction:
 

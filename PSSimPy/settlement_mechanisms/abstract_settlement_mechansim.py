@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ..core.transaction import Transaction
+from PSSimPy.transaction import Transaction
 
 class AbstractSettlementMechanism(ABC):
     

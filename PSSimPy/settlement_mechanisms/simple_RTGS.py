@@ -1,5 +1,5 @@
-from .abstract_settlement_mechansim import AbstractSettlementMechanism
-from ..core.transaction import Transaction
+from PSSimPy.settlement_mechanisms.abstract_settlement_mechansim import AbstractSettlementMechanism
+from PSSimPy.transaction import Transaction
 
 class SimpleRTGS(AbstractSettlementMechanism):
 

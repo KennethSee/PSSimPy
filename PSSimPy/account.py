@@ -1,4 +1,4 @@
-from .bank import Bank
+from PSSimPy.bank import Bank
 
 class Account:
 
