@@ -7,6 +7,6 @@ class Account:
         self.owner = owner
         self.balance = balance
 
-    def transfer_to(self, receipient: Bank, amount: float):
+    def transfer_to(self, receipient: 'Account', amount: float) -> None:
         self.balance -= amount
         receipient.balance += amount
