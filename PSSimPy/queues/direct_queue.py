@@ -3,21 +3,14 @@ from PSSimPy.transaction import Transaction
 
 class DirectQueue(AbstractQueue):
     
-    def __init__(self, transactions: list[Transaction] = None) -> None:
+    def __init__(self):
         super().__init__()
-        self.queue = []
+
+    @staticmethod
+    def sorting_logic(queue_item: tuple[Transaction, int]) -> int:
+        _, period = queue_item
+        return period
         
-        if transactions is not None:
-            self.load_txn(transactions)
-        
-    def enqueue(self, transaction: Transaction) -> None:
-        self.queue.append(transaction)
-        
-    def dequeue(self) -> Transaction:
-        return self.queue.pop()
-    
-    def load_txn(self, transactions: list[Transaction]) -> None:
-        self.queue.extend(transactions)
-    
-    def sort(self) -> None:
-        pass
+    @staticmethod
+    def dequeue_criteria(queue_item: tuple[Transaction, int]) -> bool:
+        return True
