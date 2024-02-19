@@ -1,7 +1,7 @@
 from PSSimPy.queues.abstract_queue import AbstractQueue
 from PSSimPy.transaction import Transaction
 
-class DirectQueue(AbstractQueue):
+class FIFOQueue(AbstractQueue):
     
     def __init__(self):
         super().__init__()
