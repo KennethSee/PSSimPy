@@ -1,12 +1,12 @@
 import unittest
-from PSSimPy.queues.fifo_queue import FIFOQueue
+from PSSimPy.queues.direct_queue import DirectQueue
 from PSSimPy.transaction import Transaction
 
 class TestQueue(unittest.TestCase):
     
     # Set up your test environment before each test method
     def setUp(self):
-        self.q = FIFOQueue()
+        self.q = DirectQueue()
         self.txn1 = Transaction('test1', 'test2', 1)
         self.txn2 = Transaction('test2', 'test1', 2)
     
