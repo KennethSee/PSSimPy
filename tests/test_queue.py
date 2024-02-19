@@ -1,6 +1,6 @@
 import unittest
-from PSSimPy.queues.direct_queue import DirectQueue
-from PSSimPy.transaction import Transaction
+from PSSimPy.queues import DirectQueue
+from PSSimPy import Transaction
 
 class TestQueue(unittest.TestCase):
     
