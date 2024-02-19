@@ -1,7 +1,7 @@
-from PSSimPy.settlement_mechanisms.abstract_settlement_mechansim import AbstractSettlementMechanism
-from PSSimPy.queues.abstract_queue import AbstractQueue
-from PSSimPy.credit_facilities.abstract_credit_facility import AbstractCreditFacility
-from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES
+from PSSimPy.settlement_mechanisms import AbstractSettlementMechanism
+from PSSimPy.queues import AbstractQueue, DirectQueue
+from PSSimPy.credit_facilities import AbstractCreditFacility
+from PSSimPy.utils import TRANSACTION_STATUS_CODES
 
 
 class BasicSim:
