@@ -30,6 +30,10 @@ class MaxSizeConstraintHandler(AbstractConstraintHandler):
                 priority=transaction.priority,
                 **kwargs
             )
+
+            # Update original transaction to update status
+            transaction.update_transaction_status('Modified')
+
             # Recursively process the split transactions
             self.process_transaction(txn1)
             self.process_transaction(txn2)
