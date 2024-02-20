@@ -1,6 +1,6 @@
 import unittest
 
-from PSSimPy.constraint_handler import AbstractConstraintHandler, SimpleConstraintHandler
+from PSSimPy.constraint_handler import AbstractConstraintHandler, MaxSizeConstraintHandler, MinBalanceConstraintHandler, PassThroughHandler
 from PSSimPy import Transaction
 from PSSimPy import Account
 
@@ -14,7 +14,7 @@ class TestConstraintHandler(unittest.TestCase):
         self.txn1 = Transaction(self.acc1, self.acc2, 100)
         self.txn2 = Transaction(self.acc1, self.acc2, 200)
         self.txn3 = Transaction(self.acc1, self.acc2, 205)
-        self.simple_constraint_handler = SimpleConstraintHandler(max_txn_size=100)
+        self.simple_constraint_handler = MaxSizeConstraintHandler(max_txn_size=100)
 
     def test_initialization(self):
         self.assertEqual(len(self.simple_constraint_handler.passed_transactions), 0, 'Passed transactions should be empty upon initialization')

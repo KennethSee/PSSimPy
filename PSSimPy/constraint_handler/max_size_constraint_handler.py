@@ -1,7 +1,7 @@
 from PSSimPy.constraint_handler.abstract_constraint_handler import AbstractConstraintHandler
 from PSSimPy.transaction import Transaction
 
-class SimpleConstraintHandler(AbstractConstraintHandler):
+class MaxSizeConstraintHandler(AbstractConstraintHandler):
     """Splits a transaction if it exceeds max size"""
 
     def __init__(self, max_txn_size: float):
