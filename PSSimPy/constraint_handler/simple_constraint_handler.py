@@ -9,7 +9,7 @@ class SimpleConstraintHandler(AbstractConstraintHandler):
         self.max_txn_size = max_txn_size
 
     # implement abstract function
-    def process_transaction(self, transaction: Transaction):
+    def process_transaction(self, transaction: Transaction) -> list:
         """Process a transaction, splitting it if it exceeds max size and ensuring all resulting transactions pass."""
         kwargs = (transaction.kwargs if hasattr(transaction, 'kwargs') else {})
 
