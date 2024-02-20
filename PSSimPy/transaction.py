@@ -3,12 +3,11 @@ from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES
 
 class Transaction:
 
-    def __init__(self, sender_account: Account, receipient_account: Account, amount: float, priority: int=1, txn_set: set=None, **kwargs):
+    def __init__(self, sender_account: Account, receipient_account: Account, amount: float, priority: int=1, **kwargs):
         self.sender_account = sender_account
         self.receipient_account = receipient_account
         self.amount = amount
         self.priority = priority
-        self.txn_set = txn_set
         self.status_code = TRANSACTION_STATUS_CODES['Open']
         
         # Use the kwargs to store additional user-defined attributes
