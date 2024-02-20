@@ -8,7 +8,7 @@ class SimpleConstraintHandler(AbstractConstraintHandler):
         super().__init__()
         self.max_txn_size = max_txn_size
 
-    def process_transaction(self, transaction: Transaction):
+    def process_transaction(self, transaction: Transaction) -> dict:
         sender = transaction.sender_account
         receipient = transaction.receipient_account
         # check if transaction size exceeds max size
