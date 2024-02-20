@@ -3,6 +3,7 @@ import unittest
 from PSSimPy.constraint_handler import AbstractConstraintHandler, MaxSizeConstraintHandler, MinBalanceConstraintHandler, PassThroughHandler
 from PSSimPy import Transaction
 from PSSimPy import Account
+from PSSimPy.utils import TRANSACTION_STATUS_CODES
 
 
 class TestConstraintHandler(unittest.TestCase):
@@ -29,6 +30,8 @@ class TestConstraintHandler(unittest.TestCase):
         self.assertEqual(len(self.simple_constraint_handler.passed_transactions), 2, 'There should be 2 transactions processed for txn2')
         self.assertEqual(self.simple_constraint_handler.passed_transactions[0].amount, 100)
         self.assertEqual(self.simple_constraint_handler.passed_transactions[1].amount, 100)
+        self.assertEqual(self.txn2.status_code, TRANSACTION_STATUS_CODES['Modified'], 'Original transaction should have modified trransaction status')
+        self.assertEqual(self.simple_constraint_handler.passed_transactions[1].status_code, TRANSACTION_STATUS_CODES['Open'])
 
         self.simple_constraint_handler.process_transaction(self.txn3)
         self.assertEqual(len(self.simple_constraint_handler.passed_transactions), 5, 'There should now be 5 transactions processed for txn2 and txn3')
