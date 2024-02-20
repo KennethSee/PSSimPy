@@ -7,5 +7,5 @@ from PSSimPy.transaction import *
 # Packages
 from PSSimPy.credit_facilities import *
 from PSSimPy.queues import *
-from PSSimPy.settlement_mechanisms import *
+from PSSimPy.constraint_handler import *
 from PSSimPy.utils import *

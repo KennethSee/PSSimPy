@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from PSSimPy import Transaction
+from PSSimPy.transaction import Transaction
 
 class AbstractConstraintHandler(ABC):
 

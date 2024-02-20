@@ -1,4 +1,4 @@
-from PSSimPy.settlement_mechanisms import AbstractSettlementMechanism
+from PSSimPy.constraint_handler import AbstractConstraintHandler
 from PSSimPy.queues import AbstractQueue, DirectQueue
 from PSSimPy.credit_facilities import AbstractCreditFacility
 from PSSimPy.utils import TRANSACTION_STATUS_CODES
@@ -10,7 +10,7 @@ class BasicSim:
                  open_time: str,
                  close_time: str,
                  num_days: int,
-                 settlement_mechanism: AbstractSettlementMechanism,
+                 settlement_mechanism: AbstractConstraintHandler,
                  queue: AbstractQueue,
                  credit_facility: AbstractCreditFacility,
                  accounts: list[dict] = None,
