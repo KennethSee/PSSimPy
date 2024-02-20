@@ -1,6 +1,6 @@
-from PSSimPy.constraint_handler import AbstractConstraintHandler
+from PSSimPy.constraint_handler import AbstractConstraintHandler, PassThroughHandler
 from PSSimPy.queues import AbstractQueue, DirectQueue
-from PSSimPy.credit_facilities import AbstractCreditFacility
+from PSSimPy.credit_facilities import AbstractCreditFacility, SimplePriced
 from PSSimPy.utils import TRANSACTION_STATUS_CODES
 
 
@@ -10,16 +10,16 @@ class BasicSim:
                  open_time: str,
                  close_time: str,
                  num_days: int,
-                 settlement_mechanism: AbstractConstraintHandler,
-                 queue: AbstractQueue,
-                 credit_facility: AbstractCreditFacility,
+                 constraint_handler: AbstractConstraintHandler = PassThroughHandler,
+                 queue: AbstractQueue = DirectQueue,
+                 credit_facility: AbstractCreditFacility = SimplePriced,
                  accounts: list[dict] = None,
                  transactions: list[dict] = None):
         
         self.open_time = open_time
         self.close_time = close_time
         self.num_days = num_days
-        self.settlement_mechanism = settlement_mechanism
+        self.constraint_handler = constraint_handler
         self.queue = queue
         self.credit_facility = credit_facility
         self.part_accounts = []
