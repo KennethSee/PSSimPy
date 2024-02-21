@@ -16,4 +16,4 @@ class AbstractConstraintHandler(ABC):
         return self.passed_transactions
     
     def clear(self):
-        self.pass_transactions = []
+        self.passed_transactions = []

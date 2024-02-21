@@ -24,6 +24,10 @@ class TestSystem(unittest.TestCase):
         self.priority_queue = PriorityQueue()
         self.fifo_queue = FIFOQueue()
 
+    def tearDown(self) -> None:
+        Transaction.clear_instances()
+        return super().tearDown()
+
     def test_process_success(self):
         system = System(self.pass_through_handler, self.direct_queue)
         txns_to_process = set([self.txn1, self.txn2, self.txn3])
@@ -57,6 +61,28 @@ class TestSystem(unittest.TestCase):
         self.assertEqual(self.txn1.status_code, TRANSACTION_STATUS_CODES['Success'])
         self.assertEqual(self.txn2.status_code, TRANSACTION_STATUS_CODES['Modified'])
         self.assertEqual(self.txn3.status_code, TRANSACTION_STATUS_CODES['Modified'])
+
+    def test_process_fail(self):
+        system = System(self.min_balance_constraint_handler, self.direct_queue)
+        txns_to_process = set([self.txn4])
+        processed_txns = system.process(txns_to_process)
+        self.assertEqual(len(processed_txns), 1)
+        self.direct_queue.next_period()
+        txns_to_process = set([self.txn5])
+        processed_txns = system.process(txns_to_process)
+        self.assertEqual(len(processed_txns), 0)
+
+    def test_queue_pending(self):
+        system = System(self.pass_through_handler, self.fifo_queue)
+        txns_to_process = set([self.txn4])
+        processed_txns = system.process(txns_to_process)
+        self.assertEqual(len(processed_txns), 1)
+        self.assertEqual(len(self.fifo_queue.queue), 0)
+        self.direct_queue.next_period()
+        txns_to_process = set([self.txn5])
+        processed_txns = system.process(txns_to_process)
+        self.assertEqual(len(processed_txns), 0)
+        self.assertEqual(len(self.fifo_queue.queue), 1)
 
 
 if __name__ == '__main__':
