@@ -24,3 +24,26 @@ def add_minutes_to_time(time_str: str, minutes: int) -> str:
     new_time_str = new_time_obj.strftime('%H:%M')
     
     return new_time_str
+
+def is_time_later(time_str1: str, time_str2: str, or_equal: bool=False) -> bool:
+    """
+    Check if time_str1 is later than time_str2.
+    Both time_str1 and time_str2 should be in "HH:MM" format.
+    
+    Parameters:
+    - time_str1: A string representing the first time in 24-hour format.
+    - time_str2: A string representing the second time in 24-hour format.
+    
+    Returns:
+    - True if time_str1 is later than time_str2, False otherwise.
+    """
+    # Convert time strings to datetime.time objects
+    format = "%H:%M"
+    time1 = datetime.strptime(time_str1, format).time()
+    time2 = datetime.strptime(time_str2, format).time()
+
+    # Compare the two time objects
+    if or_equal:
+        return time1 >= time2
+    else:
+        return time1 > time2
