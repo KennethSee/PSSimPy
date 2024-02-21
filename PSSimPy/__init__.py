@@ -1,8 +1,8 @@
 # Top-level modules
 from PSSimPy.account import *
 from PSSimPy.bank import *
-from PSSimPy.simulator import *
 from PSSimPy.transaction import *
+from PSSimPy.system import *
 
 # Packages
 from PSSimPy.credit_facilities import *

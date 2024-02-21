@@ -32,6 +32,10 @@ class AbstractQueue(ABC):
     
     def enqueue(self, transaction: Transaction) -> None:
         self.queue.add((transaction, self.period_counter))
+
+    def bulk_enqueue(self, transactions: set[Transaction]) -> None:
+        for transaction in transactions:
+            self.enqueue(transaction)
     
     def dequeue(self, queue_item: tuple[Transaction, int]) -> Transaction:
         self.queue.remove(queue_item)
