@@ -39,10 +39,11 @@ class ABMSim:
         """Main function that executes the simulation"""
         pass
 
+    # consider switching transactions to a sorted data structure for efficiency
     @staticmethod
-    def _gather_transactions_in_window(begin_time: str, end_time: str, transactions: set[tuple[Transaction, str]]) -> set[Transaction]:
+    def _gather_transactions_in_window(begin_time: str, end_time: str, transactions_set: set[tuple[Transaction, str]]) -> set[Transaction]:
         gathered_transactions = set()
-        for transaction, txn_time in transactions:
+        for transaction, txn_time in transactions_set:
             if is_time_later(txn_time, begin_time, True) and not(is_time_later(txn_time, end_time, False)):
                 gathered_transactions.add(transaction)
         return gathered_transactions
