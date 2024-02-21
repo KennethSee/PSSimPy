@@ -11,6 +11,9 @@ class AbstractQueue(ABC):
     def next_period(self):
         self.period_counter += 1
 
+    def reset_period(self):
+        self.period_counter = 0
+
     @staticmethod
     @abstractmethod
     def sorting_logic(queue_item: tuple[Transaction, int]) -> int:
