@@ -7,7 +7,7 @@ class AbstractConstraintHandler(ABC):
         self.passed_transactions = []
     
     @abstractmethod
-    def process_transaction(self, transaction: Transaction) -> list:
+    def process_transaction(self, transaction: Transaction):
         """Should return a list of passed transactions to be sent for further processing."""
         pass
 

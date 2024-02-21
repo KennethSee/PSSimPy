@@ -7,6 +7,6 @@ def settle_transaction(transaction: Transaction) -> None:
     txn_amount = transaction.amount
 
     sender_account.balance -= txn_amount
-    receipient_account += txn_amount
+    receipient_account.balance += txn_amount
 
     transaction.update_transaction_status('Success')

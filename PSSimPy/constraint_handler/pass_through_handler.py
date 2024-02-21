@@ -8,5 +8,5 @@ class PassThroughHandler(AbstractConstraintHandler):
         super().__init__()
 
     # implement abstract function
-    def process_transaction(self, transaction: Transaction) -> list:        
+    def process_transaction(self, transaction: Transaction):        
         self.passed_transactions.append(transaction)

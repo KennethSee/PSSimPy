@@ -9,15 +9,20 @@ class System:
         self.constraint_handler = constraint_handler
         self.queue = queue
 
-    def process(self, transactions: set[Transaction]):
+    def process(self, transactions: set[Transaction]) -> list:
         txns_to_queue = set()
         # send each transaction into the constraint handler
         for transaction in transactions:
-            txns_to_queue.update(self.constraint_handler.process_transaction(transaction))
+            self.constraint_handler.process_transaction(transaction)
+            txns_to_queue.update(self.constraint_handler.get_passed_transactions())
+        self.constraint_handler.clear()
         # send transactions that passed constraints into queue
         self.queue.bulk_enqueue(txns_to_queue)
         # obtain dequeued transactions to process
         txns_to_process = self.queue.begin_dequeueing()
         # process dequeued transactions
         for _ in map(settle_transaction, txns_to_process): pass
+
+        # return processed transactions
+        return txns_to_process
 

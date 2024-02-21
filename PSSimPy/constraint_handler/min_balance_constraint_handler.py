@@ -13,7 +13,7 @@ class MinBalanceConstraintHandler(AbstractConstraintHandler):
         self.min_balance = min_balance
 
     # implement abstract function
-    def process_transaction(self, transaction: Transaction) -> list:
+    def process_transaction(self, transaction: Transaction):
         if min_balance_maintained(transaction.sender_account, transaction.amount, self.min_balance):
             self.passed_transactions.append(transaction)
         else:
