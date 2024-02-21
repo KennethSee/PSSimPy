@@ -1,7 +1,6 @@
-from PSSimPy.transaction import Transaction
 from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES
 
-def settle_transaction(transaction: Transaction) -> None:
+def settle_transaction(transaction) -> None:
     sender_account = transaction.sender_account
     receipient_account = transaction.receipient_account
     txn_amount = transaction.amount
