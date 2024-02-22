@@ -47,3 +47,26 @@ def is_time_later(time_str1: str, time_str2: str, or_equal: bool=False) -> bool:
         return time1 >= time2
     else:
         return time1 > time2
+    
+    
+def minutes_between(time_str1: str, time_str2: str) -> int:
+    """
+    Calculates the number of minutes between two time strings in 24-hour format.
+
+    Parameters:
+    - time_str1: A string representing the first time (e.g., "HH:MM").
+    - time_str2: A string representing the second time (e.g., "HH:MM").
+
+    Returns:
+    - The difference in minutes as an integer. If time_str2 is earlier than time_str1,
+      the result will be negative.
+    """
+    format = "%H:%M"
+    time1 = datetime.strptime(time_str1, format)
+    time2 = datetime.strptime(time_str2, format)
+
+    # Calculate the difference between the two times
+    delta = time2 - time1
+
+    # Return the difference in minutes
+    return int(delta.total_seconds() / 60)
