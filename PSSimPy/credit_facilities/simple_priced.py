@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 from PSSimPy.credit_facilities.abstract_credit_facility import AbstractCreditFacility
 from PSSimPy.account import Account
 
