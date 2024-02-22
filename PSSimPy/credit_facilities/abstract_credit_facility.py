@@ -7,8 +7,7 @@ class AbstractCreditFacility(ABC):
     
     def __init__(self) -> None:
         super().__init__()
-        self.total_credit = defaultdict(float)
-        self.total_fee = defaultdict(float)
+        self.used_credit = defaultdict(list)
         
     def collect_all_repayment(self, accounts: list[Account]) -> None:
         """
@@ -18,33 +17,15 @@ class AbstractCreditFacility(ABC):
         """
         for account in accounts:
             self.collect_repayment(account=account)
-        
-    def get_total_credit(self, account: Account) -> float:
+            
+    @abstractmethod
+    def calculate_fee(self) -> float:
         """
-        Obtain the total amount of credit lent to a participant.
-               
-        :param account: Participant's account
-        :return: The total amount of credit
-        """
-        return self.total_credit[account.id]
-    
-    def get_total_fee(self, account: Account) -> float:
-        """
-        Obtain the total fee amount for a participant.
-        
-        :param account: Participant's account
-        :return: The total fee amount
-        """
-        return self.total_fee[account.id]
-    
-    def get_total_credit_and_fee(self, account: Account) -> float:
-        """
-        Obtain the total amount of credit and fee for a participant.
+        Calculate the fee amount for a credit lent to a participant.
 
-        :param account: Participant's account
-        :return: The total amount of credit and fee
+        :return: The fee amount
         """
-        return self.total_credit[account.id] + self.total_fee[account.id]
+        pass
         
     @abstractmethod
     def lend_credit(self, account: Account, amount: float) -> None:
@@ -69,3 +50,30 @@ class AbstractCreditFacility(ABC):
         :param amount: The amount of repayment to collect
         """
         pass
+
+    def get_total_credit(self, account: Account) -> float:
+        """
+        Obtain the total amount of credit lent to a participant.
+               
+        :param account: Participant's account
+        :return: The total amount of credit
+        """
+        return sum(self.used_credit[account.id])
+
+    def get_total_fee(self, account: Account) -> float:
+        """
+        Obtain the total fee amount for a participant.
+        
+        :param account: Participant's account
+        :return: The total fee amount
+        """
+        return sum([self.calculate_fee(x) for x in self.used_credit[account.id]])
+    
+    def get_total_credit_and_fee(self, account: Account) -> float:
+        """
+        Obtain the total amount of credit and fee for a participant.
+
+        :param account: Participant's account
+        :return: The total amount of credit and fee
+        """
+        return self.get_total_credit(account.id) + self.get_total_fee(account.id)
