@@ -76,4 +76,4 @@ class AbstractCreditFacility(ABC):
         :param account: Participant's account
         :return: The total amount of credit and fee
         """
-        return self.get_total_credit(account.id) + self.get_total_fee(account.id)
+        return self.get_total_credit(account) + self.get_total_fee(account)
