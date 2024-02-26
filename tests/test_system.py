@@ -43,11 +43,11 @@ class TestSystem(unittest.TestCase):
         """Check that transactions from a previous batch do not leak into new batch"""
         system = System(self.pass_through_handler, self.direct_queue)
         txns_to_process = set([self.txn1, self.txn2, self.txn3])
-        processed_txns = system.process(txns_to_process)
+        processed_txns = system.process(txns_to_process)['Processed']
         self.assertEqual(len(processed_txns), 3)
 
         new_txns_to_process = set([self.txn4, self.txn5])
-        processed_txns = system.process(new_txns_to_process) # need to fix
+        processed_txns = system.process(new_txns_to_process)['Processed']
         self.assertEqual(len(processed_txns), 2)
 
     def test_process_split(self):
@@ -65,22 +65,22 @@ class TestSystem(unittest.TestCase):
     def test_process_fail(self):
         system = System(self.min_balance_constraint_handler, self.direct_queue)
         txns_to_process = set([self.txn4])
-        processed_txns = system.process(txns_to_process)
+        processed_txns = system.process(txns_to_process)['Processed']
         self.assertEqual(len(processed_txns), 1)
         self.direct_queue.next_period()
         txns_to_process = set([self.txn5])
-        processed_txns = system.process(txns_to_process)
+        processed_txns = system.process(txns_to_process)['Processed']
         self.assertEqual(len(processed_txns), 0)
 
     def test_queue_pending(self):
         system = System(self.pass_through_handler, self.fifo_queue)
         txns_to_process = set([self.txn4])
-        processed_txns = system.process(txns_to_process)
+        processed_txns = system.process(txns_to_process)['Processed']
         self.assertEqual(len(processed_txns), 1)
         self.assertEqual(len(self.fifo_queue.queue), 0)
         self.direct_queue.next_period()
         txns_to_process = set([self.txn5])
-        processed_txns = system.process(txns_to_process)
+        processed_txns = system.process(txns_to_process)['Processed']
         self.assertEqual(len(processed_txns), 0)
         self.assertEqual(len(self.fifo_queue.queue), 1)
 
