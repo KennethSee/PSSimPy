@@ -19,7 +19,3 @@ class Logger:
         with open(self.file_path, mode, newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerows(data)
-
-logger = Logger('test', ('Hello', 'Wolrd'))
-data = [('h1', 'w1'), ('h2', 'w2')]
-logger.write(data)
