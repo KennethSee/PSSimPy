@@ -1,2 +1,5 @@
 *.pyc
 __pycache__
+PSSimPy/utils/.DS_Store
+.DS_Store
+.hypothesis/unicode_data/13.0.0/charmap.json.gz
