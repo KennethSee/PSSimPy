@@ -1,6 +1,6 @@
 # Top-level modules
-from PSSimPy.account import *
 from PSSimPy.bank import *
+from PSSimPy.account import *
 from PSSimPy.transaction import *
 from PSSimPy.system import *
 

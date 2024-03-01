@@ -1,6 +1,7 @@
 from PSSimPy.account import Account
 from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES
 
+
 class Transaction:
 
     # Class attribute to hold references to all instances

@@ -1,7 +1,3 @@
-from PSSimPy.queues.abstract_queue import AbstractQueue
-from PSSimPy.transaction import Transaction
-
-
 class Bank:
 
     def __init__(self, name: str, strategy_type: str='Normal', **kwargs):
@@ -13,5 +9,5 @@ class Bank:
             setattr(self, key, value)
 
     # only relevant for agent-based modeling
-    def strategy(self, queue: AbstractQueue, txns_to_settle: list[Transaction]) -> set[Transaction]:
-        pass
+    def strategy(self, txns_to_settle: list) -> set:
+        return set(txns_to_settle)
