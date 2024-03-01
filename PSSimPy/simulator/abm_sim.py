@@ -1,6 +1,8 @@
 from random import randint
 import simpy
 
+from PSSimPy.bank import Bank
+from PSSimPy.account import Account
 from PSSimPy.queues import AbstractQueue, DirectQueue
 from PSSimPy.transaction import Transaction
 from PSSimPy.system import System
@@ -16,15 +18,16 @@ class ABMSim:
 
     def __init__(self,
                  name: str, # identifying name for simulation
-                 open_time: str, # consider defaulting to 8am
-                 close_time: str, # consider defaulting to 5pm
+                 banks: dict[list],
+                 accounts: dict[list] = None,
+                 transactions: dict[list] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
+                 open_time: str = '08:00',
+                 close_time: str = '17:00',
                  processing_window: int = 15, # the number of minutes between iteration
                  num_days: int = 1,
                  constraint_handler: AbstractConstraintHandler = PassThroughHandler,
                  queue: AbstractQueue = DirectQueue,
-                 credit_facility: AbstractCreditFacility = SimplePriced,
-                 accounts: list[dict] = None,
-                 transactions: list[dict] = None # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
+                 credit_facility: AbstractCreditFacility = SimplePriced
                  ): 
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
@@ -36,6 +39,7 @@ class ABMSim:
         self.constraint_handler = constraint_handler
         self.queue = queue
         self.credit_facility = credit_facility
+        self.banks = banks
         self.accounts = accounts
         self.transactions = transactions
 
