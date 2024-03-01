@@ -1,5 +1,6 @@
 import inspect
 
+# TO-DO: Figure out how to make this more dynamic to accommodate classes that have other classes have parameters
 def initialize_classes_from_dict(class_type, data: dict) -> list:
     # determine the init parameters of the given class
     init_signature = inspect.signature(class_type.__init__)
