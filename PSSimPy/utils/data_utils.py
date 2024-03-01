@@ -9,8 +9,8 @@ def initialize_classes_from_dict(class_type, data: dict) -> list:
 
     # check that data has at least keys for the required parameters
     if not all(param_name in data for param_name in class_params_no_defaults):
-        # to throw error
-        pass 
+        missing_keys = [key for key in class_params_no_defaults if key not in data]
+        raise ValueError(f'Input data dictionary for the {class_type.__name__} class is missing required keys: {", ".join(missing_keys)}')
 
     # Determine the length of the lists in data to iterate over
     num_items = len(next(iter(data.values())))
