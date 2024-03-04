@@ -2,7 +2,7 @@ from PSSimPy.bank import Bank
 
 class Account:
 
-    def __init__(self, id: str, owner: Bank, balance: float, **kwargs):
+    def __init__(self, id: str, owner: Bank, balance: float=0, **kwargs):
         self.id = id
         self.owner = owner
         self.balance = balance

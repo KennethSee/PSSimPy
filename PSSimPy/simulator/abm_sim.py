@@ -12,6 +12,7 @@ from PSSimPy.utils.logger import Logger
 from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
+from PSSimPy.utils.data_utils import initialize_classes_from_dict
 
 class ABMSim:
     """Simulator that supports Agent-Based Modeling"""
@@ -19,7 +20,7 @@ class ABMSim:
     def __init__(self,
                  name: str, # identifying name for simulation
                  banks: dict[list],
-                 accounts: dict[list] = None,
+                 accounts: dict[list],
                  transactions: dict[list] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
                  open_time: str = '08:00',
                  close_time: str = '17:00',
@@ -39,9 +40,9 @@ class ABMSim:
         self.constraint_handler = constraint_handler
         self.queue = queue
         self.credit_facility = credit_facility
-        self.banks = banks
-        self.accounts = accounts
-        self.transactions = transactions
+        
+        # load data
+        self._load_initial_data(banks, accounts, transactions)
 
         # set up simulator
         self.env = simpy.Environment()
@@ -100,3 +101,22 @@ class ABMSim:
             )
             for transaction in transactions
         ]
+    
+    def _load_initial_data(self, banks_dict: dict, accounts_dict: dict, transactions_dict: dict):
+        # load bank data
+        banks_list = initialize_classes_from_dict(Bank, banks_dict)
+        self.banks = {bank.name: bank for bank in banks_list}
+        # load accounts data
+        accounts_revised_dict = accounts_dict.copy()
+        accounts_revised_dict['owner'] = list(map(lambda x: self.banks[x], accounts_dict['owner']))
+        accounts_list = initialize_classes_from_dict(Account, accounts_revised_dict)
+        self.accounts = {account.id: account for account in accounts_list}
+        # load transactions data
+        if transactions_dict is not None:
+            transactions_revised_dict = transactions_dict.copy()
+            transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
+            transactions_revised_dict['receipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['receipient_account']))
+            transactions_list = initialize_classes_from_dict(Transaction, transactions_revised_dict)
+            transactions_list_with_time = [(transaction, transaction.time) for transaction in transactions_list]
+            self.transactions = set(transactions_list_with_time)
+

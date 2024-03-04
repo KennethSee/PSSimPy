@@ -1,7 +1,8 @@
 import inspect
 
-# TO-DO: Figure out how to make this more dynamic to accommodate classes that have other classes have parameters
+
 def initialize_classes_from_dict(class_type, data: dict) -> list:
+    """Initializes classes from the headers and contents of the provided dictionary."""
     # determine the init parameters of the given class
     init_signature = inspect.signature(class_type.__init__)
     class_params = [param_name for param_name in init_signature.parameters.keys() if param_name not in ('self', 'kwargs')]
