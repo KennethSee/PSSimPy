@@ -26,9 +26,9 @@ class ABMSim:
                  close_time: str = '17:00',
                  processing_window: int = 15, # the number of minutes between iteration
                  num_days: int = 1,
-                 constraint_handler: AbstractConstraintHandler = PassThroughHandler,
-                 queue: AbstractQueue = DirectQueue,
-                 credit_facility: AbstractCreditFacility = SimplePriced
+                 constraint_handler: AbstractConstraintHandler = PassThroughHandler(),
+                 queue: AbstractQueue = DirectQueue(),
+                 credit_facility: AbstractCreditFacility = SimplePriced()
                  ): 
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
@@ -40,6 +40,7 @@ class ABMSim:
         self.constraint_handler = constraint_handler
         self.queue = queue
         self.credit_facility = credit_facility
+        self.outstanding_transactions = set()
         
         # load data
         self._load_initial_data(banks, accounts, transactions)
@@ -52,9 +53,14 @@ class ABMSim:
         # loggers
         self.transaction_logger = Logger(logger_file_name(name, 'processed_transactions'), TRANSACTION_LOGGER_HEADER)
 
-    def load_transactions(self, transactions: list[dict]):
+    def load_transactions(self, transactions_dict: list[dict]):
         """Overwrites existing transactions if they already exist"""
-        self.transactions = transactions
+        transactions_revised_dict = transactions_dict.copy()
+        transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
+        transactions_revised_dict['receipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['receipient_account']))
+        transactions_list = initialize_classes_from_dict(Transaction, transactions_revised_dict)
+        transactions_list_with_time = [(transaction, transaction.time) for transaction in transactions_list]
+        self.transactions = set(transactions_list_with_time)
 
     def run(self):
         """Main function that executes the simulation"""
@@ -65,14 +71,27 @@ class ABMSim:
     def _simulate_day(self, day: int=1, txn_size_lower_bound: int=0, tx_size_upper_bound: int=100):
         while True:
             current_time_str = add_minutes_to_time(self.open_time, self.env.now)
+            period_end_time_str = add_minutes_to_time(current_time_str, self.processing_window - 1)
             print(f'Current time: {current_time_str}')
             # settlement logic
-            # 1. for each account pair (exclude pairs belonging to the same bank), generate a transaction with probability p and add to outstanding transactions
-            # generated transactions will have arrival time set as current_time_str and a random size between lower and upper bounds
+            if self.transactions is None:
+                # 1a. for each account pair (exclude pairs belonging to the same bank), generate a transaction with probability p and add to outstanding transactions
+                # generated transactions will have arrival time set as current_time_str and a random size between lower and upper bounds
+                pass
+            else:
+                # 1b. get the transactions pertaining to this time window
+                curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
+                self.outstanding_transactions.update(curr_period_transactions)
             # 2. go through outstanding transaction list and identify transactions to settle in current period based on bank strategy
+            transactions_to_settle = set()
+            for bank_name, bank in self.banks.items():
+                bank_oustanding_transactions = {transaction for transaction in self.outstanding_transactions if transaction.receipient_account.owner.name == bank_name}
+                transactions_to_settle.update(bank.strategy(bank_oustanding_transactions))
+            self.outstanding_transactions -= transactions_to_settle # remove transactions being settled from outstanding transactions set
             # 3. obtain necessary intraday credit
             # 4. identified transactions to be settled sent into System to be processed
-            transactions_to_log = self.system.process(transactions_to_settle)
+            processed_transactions = self.system.process(transactions_to_settle)
+            transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions} # merge the settled and failed transactions
             # 5. processed transactions printed to log
             self.transaction_logger.write(self._extract_logging_details(transactions_to_log, day, current_time_str))
 
@@ -113,10 +132,5 @@ class ABMSim:
         self.accounts = {account.id: account for account in accounts_list}
         # load transactions data
         if transactions_dict is not None:
-            transactions_revised_dict = transactions_dict.copy()
-            transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
-            transactions_revised_dict['receipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['receipient_account']))
-            transactions_list = initialize_classes_from_dict(Transaction, transactions_revised_dict)
-            transactions_list_with_time = [(transaction, transaction.time) for transaction in transactions_list]
-            self.transactions = set(transactions_list_with_time)
+            self.load_transactions(transactions_dict)
 

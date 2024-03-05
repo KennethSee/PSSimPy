@@ -9,5 +9,5 @@ class Bank:
             setattr(self, key, value)
 
     # only relevant for agent-based modeling
-    def strategy(self, txns_to_settle: list) -> set:
-        return set(txns_to_settle)
+    def strategy(self, txns_to_settle: set) -> set:
+        return txns_to_settle
