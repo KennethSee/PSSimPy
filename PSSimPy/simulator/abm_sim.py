@@ -1,5 +1,7 @@
 from random import randint
+from typing import Union
 import simpy
+import pandas as pd
 
 from PSSimPy.bank import Bank
 from PSSimPy.account import Account
@@ -19,9 +21,9 @@ class ABMSim:
 
     def __init__(self,
                  name: str, # identifying name for simulation
-                 banks: dict[list],
-                 accounts: dict[list],
-                 transactions: dict[list] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
+                 banks: Union[pd.DataFrame, dict[list]],
+                 accounts: Union[pd.DataFrame, dict[list]],
+                 transactions: Union[pd.DataFrame, dict[list]] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
                  open_time: str = '08:00',
                  close_time: str = '17:00',
                  processing_window: int = 15, # the number of minutes between iteration
@@ -43,6 +45,12 @@ class ABMSim:
         self.outstanding_transactions = set()
         
         # load data
+        if isinstance(banks, pd.DataFrame):
+            banks = banks.to_dict(orient='list')
+        if isinstance(accounts, pd.DataFrame):
+            accounts = accounts.to_dict(orient='list')
+        if isinstance(transactions, pd.DataFrame):
+            transactions = transactions.to_dict(orient='list')
         self._load_initial_data(banks, accounts, transactions)
 
         # set up simulator
