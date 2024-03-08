@@ -142,3 +142,19 @@ class ABMSim:
         if transactions_dict is not None:
             self.load_transactions(transactions_dict)
 
+    # current implementation is O(n^2). Possible to optimize?
+    def _account_mappings(self):
+        """
+        Get bilateral mapping of accounts that do not belong to the same bank.
+        """
+        bilateral_mappings = set()
+        accounts = self.accounts.values()
+        # Iterate through each account
+        for i, account_a in enumerate(accounts):
+            for account_b in list(accounts)[i+1:]:
+                # Check if the accounts belong to different banks
+                if account_a.owner.name != account_b.owner.name:
+                    # Add the mapping to the set, ensuring account_a's id is always lower to avoid duplicates
+                    mapping = tuple(sorted((account_a.id, account_b.id), key=str))
+                    bilateral_mappings.add(mapping)
+        return bilateral_mappings
