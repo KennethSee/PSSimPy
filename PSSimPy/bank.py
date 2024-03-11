@@ -10,4 +10,7 @@ class Bank:
 
     # only relevant for agent-based modeling
     def strategy(self, txns_to_settle: set) -> set:
+        # possible relevant data:
+        # - Queue
+        # - Historical transaction data (perhaps just give simulator name and they can access historical transaction data from log file)
         return txns_to_settle

@@ -8,5 +8,5 @@ transactions = {'sender_account': ['acc1', 'acc2'], 'receipient_account': ['acc2
 sim = ABMSim('Test ABM', banks, accounts, transactions, open_time='08:00', close_time='09:00')
 # sim.run()
 
-# print(sim.accounts['acc2'].balance)
-print(sim._account_mappings())
+print(sim.accounts['acc1'].balance)
+# print(sim._account_mappings())

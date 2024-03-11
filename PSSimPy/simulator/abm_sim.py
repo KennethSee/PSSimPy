@@ -52,6 +52,7 @@ class ABMSim:
         if isinstance(transactions, pd.DataFrame):
             transactions = transactions.to_dict(orient='list')
         self._load_initial_data(banks, accounts, transactions)
+        self.account_map = self._account_mappings()
 
         # set up simulator
         self.env = simpy.Environment()
@@ -94,14 +95,18 @@ class ABMSim:
             transactions_to_settle = set()
             for bank_name, bank in self.banks.items():
                 bank_oustanding_transactions = {transaction for transaction in self.outstanding_transactions if transaction.receipient_account.owner.name == bank_name}
-                transactions_to_settle.update(bank.strategy(bank_oustanding_transactions))
+                transactions_to_settle.update(bank.strategy(bank_oustanding_transactions, self.name, current_time_str, self.queue))
             self.outstanding_transactions -= transactions_to_settle # remove transactions being settled from outstanding transactions set
             # 3. obtain necessary intraday credit
             # 4. identified transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(transactions_to_settle)
             transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions} # merge the settled and failed transactions
             # 5. processed transactions printed to log
-            self.transaction_logger.write(self._extract_logging_details(transactions_to_log, day, current_time_str))
+            self.transaction_logger.write(self._extract_logging_details(transactions_to_log, day, current_time_str)) # settled and failed transactions
+            # aggregate queue statistics
+            # account balance statistics
+            # transaction fees
+            # transactions arrival (ONLY IF TRANSACTIONS ARE MODELED TO BE RANDOM)
 
             # end of period
             yield self.env.timeout(self.processing_window)
@@ -129,10 +134,18 @@ class ABMSim:
             for transaction in transactions
         ]
     
-    def _load_initial_data(self, banks_dict: dict, accounts_dict: dict, transactions_dict: dict):
+    def _load_initial_data(self, banks_dict: dict, accounts_dict: dict, transactions_dict: dict, strategy_mapping: dict=None):
         # load bank data
         banks_list = initialize_classes_from_dict(Bank, banks_dict)
         self.banks = {bank.name: bank for bank in banks_list}
+        if strategy_mapping is not None:
+            for bank_name, bank in self.banks.items():
+                # update bank to use the appropriate class according to their defined strategies
+                bank_strategy = bank.strategy
+                if bank_strategy != 'Normal':
+                    bank_attrs = vars(bank)
+                    updated_bank = strategy_mapping[bank_strategy](**bank_attrs)
+                    self.banks[bank_name] = updated_bank
         # load accounts data
         accounts_revised_dict = accounts_dict.copy()
         accounts_revised_dict['owner'] = list(map(lambda x: self.banks[x], accounts_dict['owner']))
