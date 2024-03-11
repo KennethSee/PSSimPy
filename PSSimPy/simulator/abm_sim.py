@@ -73,9 +73,10 @@ class ABMSim:
 
     def run(self):
         """Main function that executes the simulation"""
-        # to implement
+        # repeate simulation for each day
         for _ in range(self.num_days):
             self.env.run(until=minutes_between(self.open_time, self.close_time))
+            # EOD handling - not implemented for now
 
     def _simulate_day(self, day: int=1, txn_size_lower_bound: int=0, tx_size_upper_bound: int=100):
         while True:
