@@ -1,3 +1,5 @@
+from PSSimPy.queues.abstract_queue import AbstractQueue
+
 class Bank:
 
     def __init__(self, name: str, strategy_type: str='Normal', **kwargs):
@@ -9,8 +11,5 @@ class Bank:
             setattr(self, key, value)
 
     # only relevant for agent-based modeling
-    def strategy(self, txns_to_settle: set) -> set:
-        # possible relevant data:
-        # - Queue
-        # - Historical transaction data (perhaps just give simulator name and they can access historical transaction data from log file)
+    def strategy(self, txns_to_settle: set, sim_name: str, current_time: str, queue: AbstractQueue) -> set:
         return txns_to_settle
