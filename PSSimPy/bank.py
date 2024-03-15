@@ -5,6 +5,7 @@ class Bank:
     def __init__(self, name: str, strategy_type: str='Normal', **kwargs):
         self.name = name
         self.strategy_type = strategy_type
+        self.is_failed = False
 
         # Use the kwargs to store additional user-defined attributes
         for key, value in kwargs.items():

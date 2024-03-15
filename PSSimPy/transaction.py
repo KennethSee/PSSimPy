@@ -1,5 +1,7 @@
 from PSSimPy.account import Account
+
 from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES
+from PSSimPy.utils.account_utils import is_failed_account
 
 
 class Transaction:
@@ -30,6 +32,10 @@ class Transaction:
             self.status_code = TRANSACTION_STATUS_CODES[status]
         except KeyError:
             print(f"Invalid status: '{status}'. Please provide a valid transaction status.")
+
+    def involves_failed_bank(self) -> bool:
+        """Checks if either the sender or receipient accounts belongs to a failed bank"""
+        return is_failed_account(self.sender_account) or is_failed_account(self.receipient_account)
 
     @classmethod
     def get_instances(cls):

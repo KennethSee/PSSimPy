@@ -33,7 +33,8 @@ class ABMSim:
                  queue: AbstractQueue = DirectQueue(),
                  credit_facility: AbstractCreditFacility = SimplePriced(),
                  transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
-                 transaction_fee_rate: Union[float, dict[float]] = 0.0
+                 transaction_fee_rate: Union[float, dict[float]] = 0.0,
+                 bank_failure: dict[list[tuple[str, str]]] = None # key is day and value is a tuple of time and bank name
                  ): 
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
@@ -47,6 +48,7 @@ class ABMSim:
         self.credit_facility = credit_facility
         self.transaction_fee_handler = transaction_fee_handler
         self.transaction_fee_rate = transaction_fee_rate
+        self.bank_failure = bank_failure
         self.outstanding_transactions = set()
         
         # load data
@@ -90,6 +92,9 @@ class ABMSim:
             current_time_str = add_minutes_to_time(self.open_time, self.env.now)
             period_end_time_str = add_minutes_to_time(current_time_str, self.processing_window - 1)
             print(f'Current time: {current_time_str}')
+            # check if any bank fails in this time period
+            self._update_failed_banks(day, current_time_str, period_end_time_str)
+
             # settlement logic
             if self.transactions is None:
                 # 1a. for each account pair (exclude pairs belonging to the same bank), generate a transaction with probability p and add to outstanding transactions
@@ -100,6 +105,12 @@ class ABMSim:
                 curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
                 self.outstanding_transactions.update(curr_period_transactions)
             # 2. go through outstanding transaction list and identify transactions to settle in current period based on bank strategy
+            # remove outstanding transactions where a failed bank is involved
+            txns_failed_from_bank_failure = {transaction for transaction in self.outstanding_transactions if transaction.involves_failed_bank()}
+            for transaction in txns_failed_from_bank_failure:
+                transaction.status_code = TRANSACTION_STATUS_CODES['Failed']
+            self.outstanding_transactions -= txns_failed_from_bank_failure
+            # proceed with identifying transactions to settle
             transactions_to_settle = set()
             for bank_name, bank in self.banks.items():
                 bank_oustanding_transactions = {transaction for transaction in self.outstanding_transactions if transaction.receipient_account.owner.name == bank_name}
@@ -109,6 +120,8 @@ class ABMSim:
             # 4. identified transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(transactions_to_settle)
             transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions} # merge the settled and failed transactions
+            transactions_to_log.update(txns_failed_from_bank_failure) # add the failed transactions due to bank failure
+
             # extract transaction fees from successful transactions
             transaction_fees = [(transaction.sender_account.id, day, current_time_str, self.transaction_fee_handler.calculate_fee(transaction.amount, current_time_str, self.transaction_fee_rate)) 
                                 for transaction in processed_transactions['Processed']]
@@ -183,3 +196,12 @@ class ABMSim:
                     mapping = tuple(sorted((account_a.id, account_b.id), key=str))
                     bilateral_mappings.add(mapping)
         return bilateral_mappings
+    
+    def _update_failed_banks(self, day, begin_time, end_time):
+        if self.bank_failure is not None and day in self.bank_failure:
+            failures_to_check = self.bank_failure[day]
+            for time, bank_name in failures_to_check:
+                if is_time_later(time, begin_time, True) and not(is_time_later(time, end_time, False)):
+                    # update bank status to failed
+                    self.banks[bank_name].is_failed = True
+
