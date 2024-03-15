@@ -1,6 +1,7 @@
 import simpy
 import pandas as pd
 from typing import Union
+from collections import defaultdict
 
 from PSSimPy import System, Bank, Account, Transaction
 from PSSimPy.queues import AbstractQueue, DirectQueue
@@ -88,18 +89,24 @@ class BasicSim:
         while True:
             current_time_str = add_minutes_to_time(self.open_time, self.env.now)
             period_end_time_str = add_minutes_to_time(current_time_str, self.processing_window - 1) 
-            print(f'Current time: {current_time_str}')
             
             # 1. get the transactions pertaining to this time window
             curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
-            self.outstanding_transactions.update(curr_period_transactions)
             
             # 2. obtain necessary intraday credit
-            # TODO implement intraday credit facility
+            liquidity_requirement = defaultdict(float)
+            
+            for txn in curr_period_transactions:
+                liquidity_requirement[txn.sender_account] += txn.amount
+                
+            for acc, requirement in liquidity_requirement.items():
+                credit_amount = requirement - acc.balance
+                if credit_amount > 0:
+                    self.credit_facility.lend_credit(acc, credit_amount)
             
             # 3. outstanding transactions to be settled sent into System to be processed
-            processed_transactions = self.system.process(self.outstanding_transactions)
-                        
+            processed_transactions = self.system.process(curr_period_transactions)
+            
             # 5. processed transactions printed to log
             # transaction log
             transaction_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions}
@@ -113,12 +120,14 @@ class BasicSim:
     def run(self):
         for _ in range(self.num_days):
             self.env.run(until=minutes_between(self.open_time, self.close_time))
+            self.credit_facility.collect_all_repayment(self.accounts.values())
+            # TODO implementfor multiple days simulation
             
     @staticmethod
-    def _gather_transactions_in_window(begin_time: str, end_time: str, transaction_set: set[tuple[Transaction, str]]) -> set[Transaction]:
+    def _gather_transactions_in_window(begin_time: str, end_time: str, transactions_set: set[tuple[Transaction, str]]) -> set[Transaction]:
         gathered_transactions = set()
-        for transaction, txn_time in transaction_set:
-            if is_time_later(begin_time, txn_time) and is_time_later(txn_time, end_time):
+        for transaction, txn_time in transactions_set:
+            if is_time_later(txn_time, begin_time, True) and not(is_time_later(txn_time, end_time, False)):
                 gathered_transactions.add(transaction)
         return gathered_transactions
         
@@ -128,7 +137,7 @@ class BasicSim:
             day,
             time,
             transaction.sender_account.id,
-            transaction.recipient_account.id,
+            transaction.receipient_account.id,
             transaction.amount,
             'Success' if transaction.status_code == TRANSACTION_STATUS_CODES['Success'] else 'Failed'
         ) for transaction in transactions]
