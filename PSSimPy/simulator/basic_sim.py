@@ -1,6 +1,7 @@
 import simpy
 import pandas as pd
 from typing import Union
+from collections import defaultdict
 
 from PSSimPy import System, Bank, Account, Transaction
 from PSSimPy.queues import AbstractQueue, DirectQueue
@@ -93,7 +94,15 @@ class BasicSim:
             curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
             
             # 2. obtain necessary intraday credit
-            # TODO implement intraday credit facility
+            liquidity_requirement = defaultdict(float)
+            
+            for txn in curr_period_transactions:
+                liquidity_requirement[txn.sender_account] += txn.amount
+                
+            for acc, requirement in liquidity_requirement.items():
+                credit_amount = requirement - acc.balance
+                if credit_amount > 0:
+                    self.credit_facility.lend_credit(acc, credit_amount)
             
             # 3. outstanding transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(curr_period_transactions)
@@ -111,6 +120,7 @@ class BasicSim:
     def run(self):
         for _ in range(self.num_days):
             self.env.run(until=minutes_between(self.open_time, self.close_time))
+            self.credit_facility.collect_all_repayment(self.accounts.values())
             # TODO implementfor multiple days simulation
             
     @staticmethod
