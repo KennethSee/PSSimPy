@@ -83,7 +83,6 @@ class ABMSim:
         """Main function that executes the simulation"""
         # repeate simulation for each day
         for _ in range(self.num_days):
-            # TO-DO: Add exogenous failure handling
             self.env.run(until=minutes_between(self.open_time, self.close_time))
             # EOD handling - not implemented for now
 
