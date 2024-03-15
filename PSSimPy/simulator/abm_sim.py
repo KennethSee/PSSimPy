@@ -8,10 +8,11 @@ from PSSimPy.account import Account
 from PSSimPy.queues import AbstractQueue, DirectQueue
 from PSSimPy.transaction import Transaction
 from PSSimPy.system import System
+from PSSimPy.transaction_fee import AbstractTransactionFee, FixedTransactionFee
 from PSSimPy.constraint_handler import AbstractConstraintHandler, PassThroughHandler
 from PSSimPy.credit_facilities import AbstractCreditFacility, SimplePriced
 from PSSimPy.utils.logger import Logger
-from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER
+from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER, TRANSACTION_FEE_LOGGER_HEADER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
@@ -30,7 +31,9 @@ class ABMSim:
                  num_days: int = 1,
                  constraint_handler: AbstractConstraintHandler = PassThroughHandler(),
                  queue: AbstractQueue = DirectQueue(),
-                 credit_facility: AbstractCreditFacility = SimplePriced()
+                 credit_facility: AbstractCreditFacility = SimplePriced(),
+                 transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
+                 transaction_fee_rate: Union[float, dict[float]] = 0.0
                  ): 
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
@@ -42,6 +45,8 @@ class ABMSim:
         self.constraint_handler = constraint_handler
         self.queue = queue
         self.credit_facility = credit_facility
+        self.transaction_fee_handler = transaction_fee_handler
+        self.transaction_fee_rate = transaction_fee_rate
         self.outstanding_transactions = set()
         
         # load data
@@ -61,6 +66,7 @@ class ABMSim:
 
         # loggers
         self.transaction_logger = Logger(logger_file_name(name, 'processed_transactions'), TRANSACTION_LOGGER_HEADER)
+        self.transaction_fee_logger = Logger(logger_file_name(name, 'transaction_fees'), TRANSACTION_FEE_LOGGER_HEADER)
 
     def load_transactions(self, transactions_dict: list[dict]):
         """Overwrites existing transactions if they already exist"""
@@ -75,6 +81,7 @@ class ABMSim:
         """Main function that executes the simulation"""
         # repeate simulation for each day
         for _ in range(self.num_days):
+            # TO-DO: Add exogenous failure handling
             self.env.run(until=minutes_between(self.open_time, self.close_time))
             # EOD handling - not implemented for now
 
@@ -102,11 +109,15 @@ class ABMSim:
             # 4. identified transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(transactions_to_settle)
             transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions} # merge the settled and failed transactions
+            # extract transaction fees from successful transactions
+            transaction_fees = [(transaction.sender_account.id, day, current_time_str, self.transaction_fee_handler.calculate_fee(transaction.amount, current_time_str, self.transaction_fee_rate)) 
+                                for transaction in processed_transactions['Processed']]
             # 5. processed transactions printed to log
             self.transaction_logger.write(self._extract_logging_details(transactions_to_log, day, current_time_str)) # settled and failed transactions
             # aggregate queue statistics
             # account balance statistics
             # transaction fees
+            self.transaction_fee_logger.write(transaction_fees)
             # transactions arrival (ONLY IF TRANSACTIONS ARE MODELED TO BE RANDOM)
 
             # end of period

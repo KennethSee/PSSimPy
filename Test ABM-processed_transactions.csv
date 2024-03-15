@@ -1,7 +1,0 @@
-day,time,from_account,to_account,amount,status
-1,08:15,acc1,acc2,10,Success
-1,08:45,acc2,acc1,5,Success
-1,08:15,acc1,acc2,10,Success
-1,08:45,acc2,acc1,5,Success
-1,08:15,acc1,acc2,10,Success
-1,08:45,acc2,acc1,5,Success

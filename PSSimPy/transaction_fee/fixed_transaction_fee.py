@@ -6,6 +6,5 @@ class FixedTransactionFee(AbstractTransactionFee):
     def __init__(self):
         super().__init__()
 
-    @staticmethod
-    def calculate_fee(txn_amount: int, time: str, rate: float) -> float:
+    def calculate_fee(self, txn_amount: int, time: str, rate: float) -> float:
         return txn_amount * rate
