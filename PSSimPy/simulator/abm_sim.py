@@ -1,4 +1,4 @@
-from random import randint
+from random import random, randint
 from typing import Union
 import simpy
 import pandas as pd
@@ -35,10 +35,21 @@ class ABMSim:
                  credit_facility: AbstractCreditFacility = SimplePriced(),
                  transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
                  transaction_fee_rate: Union[float, dict[float]] = 0.0,
-                 bank_failure: dict[list[tuple[str, str]]] = None # key is day and value is a tuple of time and bank name
+                 bank_failure: dict[list[tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
+                 txn_arrival_prob: float = None, # only required if transactions are not provided
+                 txn_amount_range: tuple[int, int] = None, # only required if transactions are not provide
+                 txn_priority_range: tuple[int, int] = (1, 1)
                  ): 
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
+        if transactions is None and (txn_arrival_prob is None or txn_amount_range is None):
+            raise ValueError('txn_arrival_prob and txn_amount_range must be specified if no transactions are provided.')
+        if transactions is None and not (txn_arrival_prob > 0.0 and txn_arrival_prob <= 1):
+            raise ValueError('txn_arrival_prob has to be a valid probability greater than 0 and at most 1.')
+        if transactions is None and (txn_amount_range[0] > txn_amount_range[1]):
+            raise ValueError('The first value of txn_amount_range cannot be greater than the second value.')
+        if transactions is None and (txn_priority_range[0] > txn_priority_range[1]):
+            raise ValueError('The first value fo txn_priority_range cannot be greater than the second value.')
         self.name = name
         self.open_time = open_time
         self.close_time = close_time
@@ -50,6 +61,13 @@ class ABMSim:
         self.transaction_fee_handler = transaction_fee_handler
         self.transaction_fee_rate = transaction_fee_rate
         self.bank_failure = bank_failure
+        self.txn_arrival_prob = txn_arrival_prob
+        self.txn_amount_range = txn_amount_range
+        self.txn_priority_range = txn_priority_range
+        if transactions is None:
+            self.generate_txns_flag = 1
+        else:
+            self.generate_txns_flag = 0
         self.outstanding_transactions = set()
         
         # load data
@@ -63,8 +81,8 @@ class ABMSim:
         self.account_map = self._account_mappings()
 
         # set up simulator
-        self.env = simpy.Environment()
-        self.env.process(self._simulate_day())
+        # self.env = simpy.Environment()
+        # self.env.process(self._simulate_day())
         self.system = System(constraint_handler, queue)
 
         # loggers
@@ -84,6 +102,8 @@ class ABMSim:
         """Main function that executes the simulation"""
         # repeate simulation for each day
         for _ in range(self.num_days):
+            self.env = simpy.Environment()
+            self.env.process(self._simulate_day())
             self.env.run(until=minutes_between(self.open_time, self.close_time))
             # EOD handling - not implemented for now
 
@@ -96,14 +116,27 @@ class ABMSim:
             self._update_failed_banks(day, current_time_str, period_end_time_str)
 
             # settlement logic
-            if self.transactions is None:
+            if self.generate_txns_flag == 1:
                 # 1a. for each account pair (exclude pairs belonging to the same bank), generate a transaction with probability p and add to outstanding transactions
                 # generated transactions will have arrival time set as current_time_str and a random size between lower and upper bounds
-                pass
+                curr_period_transactions = set()
+                for account1_id, account2_id in self.account_map:
+                    if self._txn_arrival(): # account1 -> account2
+                        rand_txn_amt = randint(self.txn_amount_range[0], self.txn_amount_range[1])
+                        rand_priority = randint(self.txn_priority_range[0], self.txn_priority_range[1])
+                        new_txn = Transaction(self.accounts[account1_id], self.accounts[account2_id], rand_txn_amt, rand_priority)
+                        curr_period_transactions.add(new_txn)
+                    if self._txn_arrival(): # account2 -> account1
+                        rand_txn_amt = randint(self.txn_amount_range[0], self.txn_amount_range[1])
+                        rand_priority = randint(self.txn_priority_range[0], self.txn_priority_range[1])
+                        new_txn = Transaction(self.accounts[account2_id], self.accounts[account1_id], rand_txn_amt, rand_priority)
+                        curr_period_transactions.add(new_txn)
+                # add created transactions to class transactions set
+                self.transactions.update({(transaction, current_time_str) for transaction in curr_period_transactions})
             else:
                 # 1b. get the transactions pertaining to this time window
                 curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
-                self.outstanding_transactions.update(curr_period_transactions)
+            self.outstanding_transactions.update(curr_period_transactions)
             # 2. go through outstanding transaction list and identify transactions to settle in current period based on bank strategy
             # remove outstanding transactions where a failed bank is involved
             txns_failed_from_bank_failure = {transaction for transaction in self.outstanding_transactions if transaction.involves_failed_bank()}
@@ -188,9 +221,11 @@ class ABMSim:
         # load transactions data
         if transactions_dict is not None:
             self.load_transactions(transactions_dict)
+        else:
+            self.transactions = set()
 
     # current implementation is O(n^2). Possible to optimize?
-    def _account_mappings(self):
+    def _account_mappings(self) -> set:
         """
         Get bilateral mapping of accounts that do not belong to the same bank.
         """
@@ -213,4 +248,8 @@ class ABMSim:
                 if is_time_later(time, begin_time, True) and not(is_time_later(time, end_time, False)):
                     # update bank status to failed
                     self.banks[bank_name].is_failed = True
+
+    def _txn_arrival(self) -> bool:
+        """Pseudorandom chance of transaction arrival"""
+        return random() < self.txn_arrival_prob
 
