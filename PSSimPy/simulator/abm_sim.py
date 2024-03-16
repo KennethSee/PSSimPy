@@ -2,6 +2,7 @@ from random import randint
 from typing import Union
 import simpy
 import pandas as pd
+from collections import defaultdict
 
 from PSSimPy.bank import Bank
 from PSSimPy.account import Account
@@ -116,6 +117,15 @@ class ABMSim:
                 transactions_to_settle.update(bank.strategy(bank_oustanding_transactions, self.name, current_time_str, self.queue))
             self.outstanding_transactions -= transactions_to_settle # remove transactions being settled from outstanding transactions set
             # 3. obtain necessary intraday credit
+            liquidity_requirement = defaultdict(float)
+            
+            for txn in curr_period_transactions:
+                liquidity_requirement[txn.sender_account] += txn.amount
+                
+            for acc, requirement in liquidity_requirement.items():
+                credit_amount = requirement - acc.balance
+                if credit_amount > 0:
+                    self.credit_facility.lend_credit(acc, credit_amount)
             # 4. identified transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(transactions_to_settle)
             transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions} # merge the settled and failed transactions
