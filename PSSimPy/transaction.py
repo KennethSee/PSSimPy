@@ -26,6 +26,8 @@ class Transaction:
         # Use the kwargs to store additional user-defined attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
+        # set default value for day
+        self.day = kwargs.get('day', 1)
 
     def update_transaction_status(self, status: str):
         try:

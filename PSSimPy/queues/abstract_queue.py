@@ -51,4 +51,11 @@ class AbstractQueue(ABC):
         for item in items_to_dequeue:
             self.dequeue(item)
         return [transaction for transaction, _ in items_to_dequeue]
+    
+    def get_num_txns(self) -> int:
+        return len(self.queue)
+
+    def get_txn_amount_total(self) -> float:
+        total_amount = sum([transaction.amount for transaction, _ in self.queue])
+        return total_amount
 

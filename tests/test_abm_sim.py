@@ -16,6 +16,6 @@ import pandas as pd
 
 banks = {'name': ['b1', 'b2', 'b3']}
 accounts = {'id': ['acc1', 'acc2', 'acc3'], 'owner': ['b1', 'b2', 'b3'], 'balance': [100, 100, 100]}
-sim = ABMSim('Test rand txn arrival', banks, accounts, num_days=1, open_time='08:00', close_time='08:15', txn_arrival_prob=0.5, txn_amount_range=(1, 100))
+sim = ABMSim('Test rand txn arrival', banks, accounts, num_days=2, open_time='08:00', close_time='09:00', txn_arrival_prob=0.5, txn_amount_range=(1, 100))
 sim.run()
 print(sim.accounts['acc1'].balance, sim.accounts['acc2'].balance, sim.accounts['acc3'].balance)
