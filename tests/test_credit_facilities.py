@@ -7,8 +7,8 @@ from PSSimPy.account import Account
 class TestSimpleCollateralizedCreditFacility(unittest.TestCase):
     
     def setUp(self) -> None:
-        self.a = Account("A", "Bank A", 100)
-        self.cf_collateralized = SimpleCollateralized({self.a.id: 150})
+        self.a = Account("A", "Bank A", 100, posted_collateral=150)
+        self.cf_collateralized = SimpleCollateralized(None)
     
     def test_lend(self):
         # lend 100 credit to A
@@ -41,7 +41,7 @@ class TestSimpleCollateralizedCreditFacility(unittest.TestCase):
         self.cf_collateralized.collect_repayment(self.a)
         self.assertEqual(self.cf_collateralized.get_total_credit(self.a), 20)
         self.assertEqual(self.cf_collateralized.get_total_fee(self.a), 0)
-        self.assertEqual(self.cf_collateralized.credit_limit['A'], 130)
+        self.assertEqual(self.a.posted_collateral, 130)
         self.assertEqual(self.a.balance, 0)
 
 
