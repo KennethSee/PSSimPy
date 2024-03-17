@@ -6,7 +6,6 @@ import PSSimPy
 from PSSimPy.credit_facilities import SimplePriced
 from PSSimPy.simulator import BasicSim
 from PSSimPy.utils import is_valid_24h_time
-from PSSimPy.constraint_handler import MinBalanceConstraintHandler
 
 class TestBasicSim(unittest.TestCase):
     def setUp(self) -> None:
