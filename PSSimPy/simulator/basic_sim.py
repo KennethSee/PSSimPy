@@ -7,8 +7,10 @@ from PSSimPy import System, Bank, Account, Transaction
 from PSSimPy.queues import AbstractQueue, DirectQueue
 from PSSimPy.credit_facilities import AbstractCreditFacility, SimplePriced
 from PSSimPy.constraint_handler import AbstractConstraintHandler, PassThroughHandler
+from PSSimPy.transaction_fee import AbstractTransactionFee, FixedTransactionFee
 from PSSimPy.utils.logger import Logger
-from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER
+from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER, TRANSACTION_FEE_LOGGER_HEADER, \
+    QUEUE_STATS_HEADER, ACCOUNT_BALANCE_HEADER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
@@ -28,7 +30,11 @@ class BasicSim:
                  num_days: int = 1,
                  constraint_handler: AbstractConstraintHandler = PassThroughHandler(),
                  queue: AbstractQueue = DirectQueue(),
-                 credit_facility: AbstractCreditFacility = SimplePriced()):
+                 credit_facility: AbstractCreditFacility = SimplePriced(),
+                 transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
+                 transaction_fee_rate: Union[float, dict[float]] = 0.0,
+                 bank_failure: dict[list[tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
+                 ):
         
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
@@ -41,6 +47,9 @@ class BasicSim:
         self.constraint_handler = constraint_handler
         self.queue = queue
         self.credit_facility = credit_facility
+        self.transaction_fee_handler = transaction_fee_handler
+        self.transaction_fee_rate = transaction_fee_rate
+        self.bank_failure = bank_failure
         self.outstanding_transactions = set()
         
         # load data
@@ -52,7 +61,6 @@ class BasicSim:
             transactions = transactions.to_dict(orient='list')
         
         self._load_initial_data(banks, accounts, transactions)
-        # self.account_map = self._account_mappings()
         
         # set up simulator
         self.env = simpy.Environment()
@@ -61,6 +69,9 @@ class BasicSim:
         
         # loggers
         self.transaction_logger = Logger(logger_file_name(name, 'processed_transactions'), TRANSACTION_LOGGER_HEADER)
+        self.transaction_fee_logger = Logger(logger_file_name(name, 'transaction_fees'), TRANSACTION_FEE_LOGGER_HEADER)
+        self.queue_stats_logger = Logger(logger_file_name(name, 'queue_stats'), QUEUE_STATS_HEADER)
+        self.account_balance_logger = Logger(logger_file_name(name, 'account_balance'), ACCOUNT_BALANCE_HEADER)
         
     def _load_initial_data(self, banks_dict: dict[list], accounts_dict: dict[list], transactions_dict: dict[list]) -> None:
         # load banks
@@ -81,24 +92,27 @@ class BasicSim:
         transactions_list_with_time = [(transaction, transaction.time) for transaction in transactions_list]
         self.transactions = set(transactions_list_with_time)
     
-    def _account_mappings(self) -> dict[str, Account]:
-        # TODO implement function to get bilateral mapping of accounts that do not belong to the same bank
-        pass
-    
     def _simulate_day(self, day: int = 1):
         while True:
             current_time_str = add_minutes_to_time(self.open_time, self.env.now)
             period_end_time_str = add_minutes_to_time(current_time_str, self.processing_window - 1) 
+            self._update_failed_banks(day, current_time_str, period_end_time_str)
             
             # 1. get the transactions pertaining to this time window
             curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
+            self.outstanding_transactions.update(curr_period_transactions)
+            # -> remove transactions from failed banks
+            txns_failed_from_bank_failure = {transaction for transaction in self.outstanding_transactions if transaction.involves_failed_bank()}
+            for transaction in txns_failed_from_bank_failure:
+                transaction.status_code = TRANSACTION_STATUS_CODES['Failed']
+            self.outstanding_transactions -= txns_failed_from_bank_failure
             
             # 2. obtain necessary intraday credit
             liquidity_requirement = defaultdict(float)
-            
+            # -> calculate liquidity requirements for all outstanding transactions
             for txn in curr_period_transactions:
                 liquidity_requirement[txn.sender_account] += txn.amount
-                
+            # -> lend required credit                
             for acc, requirement in liquidity_requirement.items():
                 credit_amount = requirement - acc.balance
                 if credit_amount > 0:
@@ -106,22 +120,32 @@ class BasicSim:
             
             # 3. outstanding transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(curr_period_transactions)
+            # -> calculate transaction fees
+            transaction_fees = [(transaction.sender_account.id, day, current_time_str, self.transaction_fee_handler.calculate_fee(transaction.amount, current_time_str, self.transaction_fee_rate)) 
+                                for transaction in processed_transactions['Processed']]
             
             # 5. processed transactions printed to log
-            # transaction log
+            # -> transaction log
             transaction_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions}
             self.transaction_logger.write(self._extract_logging_details(transaction_to_log, day, current_time_str)) # settled and failed transactions
-            # TODO queueu statistics log
-            # TODO account balance statistics log
-            # TODO transaction fees log
+            # -> queueu statistics log
+            self.queue_stats_logger.write([(day, current_time_str, self.queue.get_num_txns(), self.queue.get_txn_amount_total())])
+            # -> account balance statistics log
+            self.account_balance_logger.write([(day, current_time_str, account.id, account.balance) for account in self.accounts.values()])
+            # -> transaction fees log
+            self.transaction_fee_logger.write(transaction_fees)
             
             yield self.env.timeout(self.processing_window)       
     
     def run(self):
-        for _ in range(self.num_days):
+        """Main function that executes the simulation"""
+        # repeate simulation for each day
+        for i in range(self.num_days):
+            self.env = simpy.Environment()
+            self.env.process(self._simulate_day(i+1))
             self.env.run(until=minutes_between(self.open_time, self.close_time))
             self.credit_facility.collect_all_repayment(self.accounts.values())
-            # TODO implementfor multiple days simulation
+            # TODO EOD handling - not implemented for now
             
     @staticmethod
     def _gather_transactions_in_window(begin_time: str, end_time: str, transactions_set: set[tuple[Transaction, str]]) -> set[Transaction]:
@@ -141,3 +165,11 @@ class BasicSim:
             transaction.amount,
             'Success' if transaction.status_code == TRANSACTION_STATUS_CODES['Success'] else 'Failed'
         ) for transaction in transactions]
+    
+    def _update_failed_banks(self, day, begin_time, end_time):
+        if self.bank_failure is not None and day in self.bank_failure:
+            failures_to_check = self.bank_failure[day]
+            for time, bank_name in failures_to_check:
+                if is_time_later(time, begin_time, True) and not(is_time_later(time, end_time, False)):
+                    # update bank status to failed
+                    self.banks[bank_name].is_failed = True
