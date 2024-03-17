@@ -1,9 +1,10 @@
 class Account:
 
-    def __init__(self, id: str, owner, balance: float=0, **kwargs):
+    def __init__(self, id: str, owner, balance: float=0, posted_collateral: float = 0, **kwargs):
         self.id = id
         self.owner = owner
         self.balance = balance
+        self.posted_collateral = posted_collateral
 
         # Use the kwargs to store additional user-defined attributes
         for key, value in kwargs.items():

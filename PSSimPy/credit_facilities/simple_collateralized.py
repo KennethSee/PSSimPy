@@ -12,11 +12,10 @@ class SimpleCollateralized(AbstractCreditFacility):
         return 0.0
     
     def lend_credit(self, account: Account, amount: float) -> float:
-        if amount > self.credit_limit[account.id]:
-            return
-        account.balance += amount
+        if amount > account.posted_collateral: return
         self.used_credit[account.id].append(amount)
-        self.credit_limit[account.id] -= amount
+        account.balance += amount
+        account.posted_collateral -= amount
     
     def collect_repayment(self, account: Account) -> None:
         repaid_amount = 0
@@ -28,4 +27,4 @@ class SimpleCollateralized(AbstractCreditFacility):
                 self.used_credit[account.id][i] = 0
         
         self.used_credit[account.id] = [x for x in self.used_credit[account.id] if x != 0]
-        self.credit_limit[account.id] += repaid_amount
+        account.posted_collateral += repaid_amount
