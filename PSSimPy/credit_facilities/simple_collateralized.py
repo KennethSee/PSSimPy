@@ -4,9 +4,8 @@ from PSSimPy.account import Account
 
 class SimpleCollateralized(AbstractCreditFacility):
     
-    def __init__(self, credit_limit: dict[float]) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.credit_limit = credit_limit
     
     def calculate_fee(self, amount: float) -> float:
         return 0.0
