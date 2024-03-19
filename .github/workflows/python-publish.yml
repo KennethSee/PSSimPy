@@ -26,8 +26,6 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.8'
-    - name: Print working directory
-      run: echo "The working directory is $GITHUB_WORKSPACE"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
