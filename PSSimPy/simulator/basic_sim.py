@@ -10,7 +10,7 @@ from PSSimPy.constraint_handler import AbstractConstraintHandler, PassThroughHan
 from PSSimPy.transaction_fee import AbstractTransactionFee, FixedTransactionFee
 from PSSimPy.utils.logger import Logger
 from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER, TRANSACTION_FEE_LOGGER_HEADER, \
-    QUEUE_STATS_HEADER, ACCOUNT_BALANCE_HEADER
+    QUEUE_STATS_HEADER, ACCOUNT_BALANCE_HEADER, CREDIT_FACILITY_LOGGER_HEADER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
@@ -62,16 +62,15 @@ class BasicSim:
         
         self._load_initial_data(banks, accounts, transactions)
         
-        # set up simulator
-        self.env = simpy.Environment()
-        self.env.process(self._simulate_day())
+        # setup system
         self.system = System(constraint_handler, queue)
         
-        # loggers
+        # setup loggers
         self.transaction_logger = Logger(logger_file_name(name, 'processed_transactions'), TRANSACTION_LOGGER_HEADER)
         self.transaction_fee_logger = Logger(logger_file_name(name, 'transaction_fees'), TRANSACTION_FEE_LOGGER_HEADER)
         self.queue_stats_logger = Logger(logger_file_name(name, 'queue_stats'), QUEUE_STATS_HEADER)
         self.account_balance_logger = Logger(logger_file_name(name, 'account_balance'), ACCOUNT_BALANCE_HEADER)
+        self.credit_facility_logger = Logger(logger_file_name(name, 'credit_facility'), CREDIT_FACILITY_LOGGER_HEADER)
         
     def _load_initial_data(self, banks_dict: dict[list], accounts_dict: dict[list], transactions_dict: dict[list]) -> None:
         # load banks
@@ -134,6 +133,11 @@ class BasicSim:
             self.account_balance_logger.write([(day, current_time_str, account.id, account.balance) for account in self.accounts.values()])
             # -> transaction fees log
             self.transaction_fee_logger.write(transaction_fees)
+            # -> credit facility usage log
+            self.credit_facility_logger.write([
+                (day, current_time_str, account.id, account.posted_collateral, self.credit_facility.get_total_credit(account), self.credit_facility.get_total_fee(account))
+                for account in self.accounts.values()
+            ])
             
             yield self.env.timeout(self.processing_window)       
     

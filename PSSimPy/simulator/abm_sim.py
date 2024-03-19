@@ -14,7 +14,7 @@ from PSSimPy.constraint_handler import AbstractConstraintHandler, PassThroughHan
 from PSSimPy.credit_facilities import AbstractCreditFacility, SimplePriced
 from PSSimPy.utils.logger import Logger
 from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER_HEADER, TRANSACTION_FEE_LOGGER_HEADER, \
-    QUEUE_STATS_HEADER, TRANSACTION_ARRIVAL_HEADER, ACCOUNT_BALANCE_HEADER
+    QUEUE_STATS_HEADER, TRANSACTION_ARRIVAL_HEADER, ACCOUNT_BALANCE_HEADER, CREDIT_FACILITY_LOGGER_HEADER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
@@ -93,6 +93,7 @@ class ABMSim:
         self.transaction_fee_logger = Logger(logger_file_name(name, 'transaction_fees'), TRANSACTION_FEE_LOGGER_HEADER)
         self.queue_stats_logger = Logger(logger_file_name(name, 'queue_stats'), QUEUE_STATS_HEADER)
         self.account_balance_logger = Logger(logger_file_name(name, 'account_balance'), ACCOUNT_BALANCE_HEADER)
+        self.credit_facility_logger = Logger(logger_file_name(name, 'credit_facility'), CREDIT_FACILITY_LOGGER_HEADER)
 
     def load_transactions(self, transactions_dict: List[Dict]):
         """Overwrites existing transactions if they already exist"""
@@ -185,8 +186,11 @@ class ABMSim:
             self.account_balance_logger.write([(day, current_time_str, account.id, account.balance) for account in self.accounts.values()])
             # transaction fees
             self.transaction_fee_logger.write(transaction_fees)
-            # TO-DO - Intraday credit fees and outstanding credit logger
-            # amount of credit each account has with the central bank at each time period
+            # Intraday credit fees and outstanding credit logger
+            self.credit_facility_logger.write([
+                (day, current_time_str, account.id, account.posted_collateral, self.credit_facility.get_total_credit(account), self.credit_facility.get_total_fee(account))
+                for account in self.accounts.values()
+            ])
 
             # end of period
             yield self.env.timeout(self.processing_window)
