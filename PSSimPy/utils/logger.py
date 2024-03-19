@@ -1,5 +1,6 @@
 import os
 import csv
+from typing import List, Tuple
 
 class Logger:
 
@@ -10,7 +11,7 @@ class Logger:
         self.file_path = file_path
         self.headers = headers
 
-    def write(self, data: list[tuple]):
+    def write(self, data: List[Tuple]):
         if not os.path.exists(self.file_path):
             data.insert(0, self.headers)
             mode = 'w'

@@ -1,3 +1,4 @@
+from typing import Tuple
 from PSSimPy.transaction import Transaction
 from abc import ABC, abstractmethod
 from sortedcontainers import SortedList
@@ -16,7 +17,7 @@ class AbstractQueue(ABC):
 
     @staticmethod
     @abstractmethod
-    def sorting_logic(queue_item: tuple[Transaction, int]) -> int:
+    def sorting_logic(queue_item: Tuple[Transaction, int]) -> int:
         """
         This sets the logic for how the queue is ordered.
         It should be implemented such that for a given tuple with the transaction and the period when it entered the queue, a postive integer is returned which represents its priority in the queue.

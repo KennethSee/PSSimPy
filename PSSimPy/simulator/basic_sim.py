@@ -1,6 +1,6 @@
 import simpy
 import pandas as pd
-from typing import Union
+from typing import Union, Dict, List, Tuple, Set
 from collections import defaultdict
 
 from PSSimPy import System, Bank, Account, Transaction
@@ -21,9 +21,9 @@ class BasicSim:
 
     def __init__(self,
                  name: str,
-                 banks: Union[pd.DataFrame, dict[list]],
-                 accounts: Union[pd.DataFrame, dict[list]],
-                 transactions: Union[pd.DataFrame, dict[list]],
+                 banks: Union[pd.DataFrame, Dict[str, List]],
+                 accounts: Union[pd.DataFrame, Dict[str, List]],
+                 transactions: Union[pd.DataFrame, Dict[str, List]],
                  open_time: str = '08:00',
                  close_time: str = '17:00',
                  processing_window: int = 15,
@@ -32,8 +32,8 @@ class BasicSim:
                  queue: AbstractQueue = DirectQueue(),
                  credit_facility: AbstractCreditFacility = SimplePriced(),
                  transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
-                 transaction_fee_rate: Union[float, dict[float]] = 0.0,
-                 bank_failure: dict[list[tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
+                 transaction_fee_rate: Union[float, Dict[str, float]] = 0.0,
+                 bank_failure: Dict[int, List[Tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
                  ):
         
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
@@ -148,7 +148,7 @@ class BasicSim:
             # TODO EOD handling - not implemented for now
             
     @staticmethod
-    def _gather_transactions_in_window(begin_time: str, end_time: str, transactions_set: set[tuple[Transaction, str]]) -> set[Transaction]:
+    def _gather_transactions_in_window(begin_time: str, end_time: str, transactions_set: Set[Tuple[Transaction, str]]) -> Set[Transaction]:
         gathered_transactions = set()
         for transaction, txn_time in transactions_set:
             if is_time_later(txn_time, begin_time, True) and not(is_time_later(txn_time, end_time, False)):
@@ -156,7 +156,7 @@ class BasicSim:
         return gathered_transactions
         
     @staticmethod
-    def _extract_logging_details(transactions: set[Transaction], day: int, time: str) -> list[tuple]:
+    def _extract_logging_details(transactions: Set[Transaction], day: int, time: str) -> List[Tuple]:
         return [(
             day,
             time,

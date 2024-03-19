@@ -1,5 +1,5 @@
 from random import random, randint
-from typing import Union
+from typing import Union, Dict, List, Tuple, Set
 import simpy
 import pandas as pd
 from collections import defaultdict
@@ -24,9 +24,9 @@ class ABMSim:
 
     def __init__(self,
                  name: str, # identifying name for simulation
-                 banks: Union[pd.DataFrame, dict[list]],
-                 accounts: Union[pd.DataFrame, dict[list]],
-                 transactions: Union[pd.DataFrame, dict[list]] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
+                 banks: Union[pd.DataFrame, Dict[str, List]],
+                 accounts: Union[pd.DataFrame, Dict[str, List]],
+                 transactions: Union[pd.DataFrame, Dict[str, List]] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
                  open_time: str = '08:00',
                  close_time: str = '17:00',
                  processing_window: int = 15, # the number of minutes between iteration
@@ -35,11 +35,11 @@ class ABMSim:
                  queue: AbstractQueue = DirectQueue(),
                  credit_facility: AbstractCreditFacility = SimplePriced(),
                  transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
-                 transaction_fee_rate: Union[float, dict[float]] = 0.0,
-                 bank_failure: dict[list[tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
+                 transaction_fee_rate: Union[float, Dict[str, float]] = 0.0,
+                 bank_failure: Dict[int, List[Tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
                  txn_arrival_prob: float = None, # only required if transactions are not provided
-                 txn_amount_range: tuple[int, int] = None, # only required if transactions are not provide
-                 txn_priority_range: tuple[int, int] = (1, 1)
+                 txn_amount_range: Tuple[int, int] = None, # only required if transactions are not provide
+                 txn_priority_range: Tuple[int, int] = (1, 1)
                  ): 
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
             raise ValueError('Invalid time input. Both open_time and close_time must be valid 24h format times.')
@@ -94,7 +94,7 @@ class ABMSim:
         self.queue_stats_logger = Logger(logger_file_name(name, 'queue_stats'), QUEUE_STATS_HEADER)
         self.account_balance_logger = Logger(logger_file_name(name, 'account_balance'), ACCOUNT_BALANCE_HEADER)
 
-    def load_transactions(self, transactions_dict: list[dict]):
+    def load_transactions(self, transactions_dict: List[Dict]):
         """Overwrites existing transactions if they already exist"""
         transactions_revised_dict = transactions_dict.copy()
         transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
@@ -122,7 +122,6 @@ class ABMSim:
         while True:
             current_time_str = add_minutes_to_time(self.open_time, self.env.now)
             period_end_time_str = add_minutes_to_time(current_time_str, self.processing_window - 1)
-            print(f'Current time: {current_time_str}')
             # check if any bank fails in this time period
             self._update_failed_banks(day, current_time_str, period_end_time_str)
 
@@ -187,13 +186,14 @@ class ABMSim:
             # transaction fees
             self.transaction_fee_logger.write(transaction_fees)
             # TO-DO - Intraday credit fees and outstanding credit logger
+            # amount of credit each account has with the central bank at each time period
 
             # end of period
             yield self.env.timeout(self.processing_window)
 
     # consider switching transactions to a sorted data structure for efficiency
     @staticmethod
-    def _gather_transactions_in_window(day: int, begin_time: str, end_time: str, transactions_set: set[tuple[Transaction, int, str]]) -> set[Transaction]:
+    def _gather_transactions_in_window(day: int, begin_time: str, end_time: str, transactions_set: Set[Tuple[Transaction, int, str]]) -> Set[Transaction]:
         gathered_transactions = set()
         for transaction, txn_day, txn_time in transactions_set:
             if txn_day == day and (is_time_later(txn_time, begin_time, True) and not(is_time_later(txn_time, end_time, False))):
@@ -201,7 +201,7 @@ class ABMSim:
         return gathered_transactions
     
     @staticmethod
-    def _extract_logging_details(transactions: set[Transaction], day: int, time: str) -> list[tuple]:
+    def _extract_logging_details(transactions: Set[Transaction], day: int, time: str) -> List[Tuple]:
         return [
             (
                 day,
