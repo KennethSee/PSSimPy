@@ -23,11 +23,17 @@ class TestBasicSim(unittest.TestCase):
                             open_time='08:00',
                             close_time='12:00',
                             num_days=1)
-        self.output_log_path = 'sim-processed_transactions.csv'
+        self.output_log_paths = {
+            'transactions': 'sim-processed_transactions.csv',
+            'fees': 'sim-transaction_fees.csv',
+            'queues': 'sim-queue_stats.csv',
+            'accounts': 'sim-account_balance.csv',
+            'credits': 'sim-credit_facility.csv',
+        }
         
     def tearDown(self):
-        if os.path.exists(self.output_log_path):
-            os.remove(self.output_log_path)
+        for path in self.output_log_paths.values():
+            if os.path.exists(path): os.remove(path)
         
     def test_bank_instances(self):
         for i, (bank_name, bank_obj) in enumerate(self.sim.banks.items()):
@@ -69,21 +75,12 @@ class TestBasicSim(unittest.TestCase):
             self.assertEqual(self.transactions['receipient_account'][i], trx.receipient_account.id)
             self.assertEqual(self.transactions['amount'][i], trx.amount)
             self.assertEqual(self.transactions['time'][i], trx.time)
-
-    def test_logger(self):
-        self.sim.run()
-        self.assertTrue(os.path.exists(self.output_log_path))
-        df = pd.read_csv(self.output_log_path)
-        self.assertEqual(df['time'].tolist(), ['08:45', '09:00', '09:15'])
-        self.assertEqual(df['status'].tolist(), ['Success', 'Success', 'Success'])
-        self.assertEqual(df['from_account'].tolist(), ['acc1', 'acc2', 'acc1'])
-        self.assertEqual(df['to_account'].tolist(), ['acc2', 'acc3', 'acc3'])
-        self.assertEqual(df['amount'].tolist(), [250, 100, 110])
         
     def test_run(self):
         # reset credit facility as it doesn't reset after simulation in other test cases
         self.sim.credit_facility = SimplePriced()
         self.sim.run()
+        
         for trx, _ in self.sim.transactions: 
             self.assertNotEqual(trx.status_code, 0)
         
@@ -96,3 +93,29 @@ class TestBasicSim(unittest.TestCase):
         self.assertEqual(self.sim.credit_facility.used_credit['acc1'], [50.0, 110.0])
         self.assertEqual(self.sim.credit_facility.used_credit['acc2'], [])
         self.assertEqual(self.sim.credit_facility.used_credit['acc3'], [])
+    
+    def test_logger(self):
+        self.tearDown()
+
+        # reset credit facility as it doesn't reset after simulation in other test cases
+        self.sim.credit_facility = SimplePriced()
+        self.sim.run()
+        
+        for path in self.output_log_paths.values():
+            self.assertTrue(os.path.exists(path))
+        
+        txn = pd.read_csv(self.output_log_paths['transactions'])
+        self.assertEqual(txn['time'].tolist(), ['08:45', '09:00', '09:15'])
+        self.assertEqual(txn['status'].tolist(), ['Success', 'Success', 'Success'])
+        self.assertEqual(txn['from_account'].tolist(), ['acc1', 'acc2', 'acc1'])
+        self.assertEqual(txn['to_account'].tolist(), ['acc2', 'acc3', 'acc3'])
+        self.assertEqual(txn['amount'].tolist(), [250, 100, 110])
+        
+        crdt = pd.read_csv(self.output_log_paths['credits'])
+        self.assertEqual(crdt[(crdt['account'] == 'acc1') & (crdt['time'] == '08:00')]['total_credit'].values[0], 0.)
+        self.assertEqual(crdt[(crdt['account'] == 'acc1') & (crdt['time'] == '08:45')]['total_credit'].values[0], 50.)
+        self.assertEqual(crdt[(crdt['account'] == 'acc1') & (crdt['time'] == '11:45')]['total_credit'].values[0], 160.)
+        
+        acc = pd.read_csv(self.output_log_paths['accounts'])
+        self.assertListEqual(acc[acc['time'] == '08:00']['balance'].tolist(), [200.0, 750.0, 1000.0])
+        self.assertListEqual(acc[acc['time'] == '11:45']['balance'].tolist(), [0.0, 900.0, 1210.0])
