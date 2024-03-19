@@ -24,6 +24,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install setuptools wheel twine  # Install setuptools, wheel, and twine
+    - name: Clear previous builds
+      run: |
+        rm -rf build/ dist/ *.egg-info
     - name: Build package
       run: |
         python setup.py sdist bdist_wheel  # Build source and wheel package
