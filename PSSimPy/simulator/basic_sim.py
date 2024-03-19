@@ -98,7 +98,7 @@ class BasicSim:
             self._update_failed_banks(day, current_time_str, period_end_time_str)
             
             # 1. get the transactions pertaining to this time window
-            curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
+            curr_period_transactions = self._gather_transactions_in_window(day, current_time_str, period_end_time_str, self.transactions)
             self.outstanding_transactions.update(curr_period_transactions)
             # -> remove transactions from failed banks
             txns_failed_from_bank_failure = {transaction for transaction in self.outstanding_transactions if transaction.involves_failed_bank()}
@@ -152,10 +152,10 @@ class BasicSim:
             # TODO EOD handling - not implemented for now
             
     @staticmethod
-    def _gather_transactions_in_window(begin_time: str, end_time: str, transactions_set: Set[Tuple[Transaction, str]]) -> Set[Transaction]:
+    def _gather_transactions_in_window(day: int, begin_time: str, end_time: str, transactions_set: Set[Tuple[Transaction, int, str]]) -> Set[Transaction]:
         gathered_transactions = set()
-        for transaction, txn_time in transactions_set:
-            if is_time_later(txn_time, begin_time, True) and not(is_time_later(txn_time, end_time, False)):
+        for transaction, txn_day, txn_time in transactions_set:
+            if txn_day == day and (is_time_later(txn_time, begin_time, True) and not(is_time_later(txn_time, end_time, False))):
                 gathered_transactions.add(transaction)
         return gathered_transactions
         

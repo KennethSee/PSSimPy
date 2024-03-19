@@ -147,7 +147,7 @@ class ABMSim:
                 self.transactions.update({(transaction, day, current_time_str) for transaction in curr_period_transactions})
             else:
                 # 1b. get the transactions pertaining to this time window
-                curr_period_transactions = self._gather_transactions_in_window(current_time_str, period_end_time_str, self.transactions)
+                curr_period_transactions = self._gather_transactions_in_window(day, current_time_str, period_end_time_str, self.transactions)
             self.outstanding_transactions.update(curr_period_transactions)
             # 2. go through outstanding transaction list and identify transactions to settle in current period based on bank strategy
             # remove outstanding transactions where a failed bank is involved
@@ -226,7 +226,7 @@ class ABMSim:
         if strategy_mapping is not None:
             for bank_name, bank in self.banks.items():
                 # update bank to use the appropriate class according to their defined strategies
-                bank_strategy = bank.strategy
+                bank_strategy = bank.strategy_type
                 if bank_strategy != 'Normal':
                     bank_attrs = vars(bank)
                     updated_bank = strategy_mapping[bank_strategy](**bank_attrs)
