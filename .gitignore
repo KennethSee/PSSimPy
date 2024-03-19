@@ -43,3 +43,5 @@ PSSimPy.egg-info/PKG-INFO
 PSSimPy.egg-info/requires.txt
 PSSimPy.egg-info/SOURCES.txt
 PSSimPy.egg-info/top_level.txt
+dist/PSSimPy-0.0.0b0-py3-none-any.whl
+dist/PSSimPy-0.0.0b0.tar.gz
