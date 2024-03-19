@@ -8,23 +8,16 @@ pip install PSSimPy
 ## Usage
 
 ```python
-from PSSimPy import BasicSim
-from PSSimPy.settlement_mechanisms import SimpleRTGS
-from PSSimPy.queues import DirectQueue
+from PSSimPy.simulator import BasicSim
+from PSSimPy.constraint_handler import MinBalanceConstraintHandler
+from PSSimPy.queues import FIFOQueue
 from PSSimPy.credit_facilities import SimplePriced
+from PSSimPy.transaction_fee import FixedTransactionFee
 
 # initialize simulator
-sim = BasicSim(open_time, close_time, num_days, settlement_mechanism=SimpleRTGS, queue=DirectQueue, credit_facility=SimplePriced)
-# load accounts
-# accounts_dict is a nested dictionary where the keys are the account IDs. Within the values of each account ID is a dictionary that has at least the following keys: owner, begin_balance.
-sim.load_accounts(accounts_dict)
-# load transactions
-# txn_lst is a list of transactions where each element is a dictionary. The dictionary needs to have at least the following keys: sender_account, receipient_account, amount
-sim.load_txn(txn_lst)
+sim = BasicSims(name='my_lvps_sim', banks=banks, accounts=accounts, transactions=transactions, num_days=1, open_time='08:00', close_time='17:00', \
+txn_arrival_prob=0.5, txn_amount_range=(1, 100), constraint_handler=MinBalanceConstraintHandler(), queue=FIFOQueue(), credit_facility=SimplePriced(), \
+transaction_fee_handler=FixedTransactionFee())
 # execute simulation
-sim.run_simulation()
-
-# retrieve simulation results
-sim.get_executed_txn_details()
-sim.get_account_balance_history()
+sim.run()
 ```
