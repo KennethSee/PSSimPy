@@ -158,7 +158,7 @@ class ABMSim:
             transactions_to_settle = set()
             for bank_name, bank in self.banks.items():
                 bank_oustanding_transactions = {transaction for transaction in self.outstanding_transactions if transaction.receipient_account.owner.name == bank_name}
-                transactions_to_settle.update(bank.strategy(bank_oustanding_transactions, self.name, day, current_time_str, self.queue))
+                transactions_to_settle.update(bank.strategy(bank_oustanding_transactions, self.outstanding_transactions, self.name, day, current_time_str, self.queue))
             self.outstanding_transactions -= transactions_to_settle # remove transactions being settled from outstanding transactions set
             # 3. obtain necessary intraday credit
             liquidity_requirement = defaultdict(float)

@@ -12,5 +12,5 @@ class Bank:
             setattr(self, key, value)
 
     # only relevant for agent-based modeling
-    def strategy(self, txns_to_settle: set, sim_name: str, day: int, current_time: str, queue: AbstractQueue) -> set:
+    def strategy(self, txns_to_settle: set, all_outstanding_transactions: set, sim_name: str, day: int, current_time: str, queue: AbstractQueue) -> set:
         return txns_to_settle
