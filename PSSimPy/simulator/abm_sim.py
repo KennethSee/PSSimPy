@@ -27,6 +27,7 @@ class ABMSim:
                  banks: Union[pd.DataFrame, Dict[str, List]],
                  accounts: Union[pd.DataFrame, Dict[str, List]],
                  transactions: Union[pd.DataFrame, Dict[str, List]] = None, # Transactions, if defined in ABM, should include time when it arrive. Time of actual settlement depends on agent's strategy.
+                 strategy_mapping: dict = None,
                  open_time: str = '08:00',
                  close_time: str = '17:00',
                  processing_window: int = 15, # the number of minutes between iteration
@@ -78,7 +79,7 @@ class ABMSim:
             accounts = accounts.to_dict(orient='list')
         if isinstance(transactions, pd.DataFrame):
             transactions = transactions.to_dict(orient='list')
-        self._load_initial_data(banks, accounts, transactions)
+        self._load_initial_data(banks, accounts, transactions, strategy_mapping)
         self.account_map = self._account_mappings()
 
         # set up simulator
