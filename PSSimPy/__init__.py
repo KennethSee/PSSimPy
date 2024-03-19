@@ -8,4 +8,6 @@ from PSSimPy.system import *
 from PSSimPy.credit_facilities import *
 from PSSimPy.queues import *
 from PSSimPy.constraint_handler import *
+from PSSimPy.transaction_fee import *
 from PSSimPy.utils import *
+from PSSimPy.simulator import *
