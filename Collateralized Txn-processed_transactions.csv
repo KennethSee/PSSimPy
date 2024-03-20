@@ -1,4 +1,0 @@
-day,time,from_account,to_account,amount,status
-1,08:00,acc1,acc2,1,Failed
-1,08:00,acc2,acc3,1,Failed
-1,08:00,acc3,acc1,1,Failed
