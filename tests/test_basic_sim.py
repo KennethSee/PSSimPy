@@ -12,9 +12,9 @@ class TestBasicSim(unittest.TestCase):
         self.banks = {'name': ['b1', 'b2', 'b3'], 'bank_code': ['ABC', 'KLM', 'XYZ']}
         self.accounts = {'id': ['acc1', 'acc2', 'acc3'], 'owner': ['b1', 'b2', 'b3'], 'balance': [200, 750, 1000]}
         self.transactions = pd.DataFrame([
-            {'sender_account': 'acc1', 'receipient_account': 'acc2', 'amount': 250, 'time': '08:50'},
-            {'sender_account': 'acc2', 'receipient_account': 'acc3', 'amount': 100, 'time': '09:00'},
-            {'sender_account': 'acc1', 'receipient_account': 'acc3', 'amount': 110, 'time': '09:15'},
+            {'sender_account': 'acc1', 'receipient_account': 'acc2', 'amount': 250, 'day':1, 'time': '08:50'},
+            {'sender_account': 'acc2', 'receipient_account': 'acc3', 'amount': 100, 'day':1, 'time': '09:00'},
+            {'sender_account': 'acc1', 'receipient_account': 'acc3', 'amount': 110, 'day':1, 'time': '09:15'},
         ])
         self.sim = BasicSim('sim',
                             banks = self.banks, # dict input
@@ -59,9 +59,9 @@ class TestBasicSim(unittest.TestCase):
     def test_transaction_instances(self): 
         # convert set into list and sort based on time      
         all_transactions = list(self.sim.transactions)
-        all_transactions.sort(key=lambda x: x[1])
+        all_transactions.sort(key=lambda x: x[2])
         
-        for i, (trx, t) in enumerate(all_transactions):
+        for i, (trx, _, t) in enumerate(all_transactions):
             # check transaction properties
             self.assertIsInstance(trx, PSSimPy.Transaction)
             self.assertTrue(is_valid_24h_time(t))
@@ -81,7 +81,7 @@ class TestBasicSim(unittest.TestCase):
         self.sim.credit_facility = SimplePriced()
         self.sim.run()
         
-        for trx, _ in self.sim.transactions: 
+        for trx, _, _ in self.sim.transactions: 
             self.assertNotEqual(trx.status_code, 0)
         
         # each account's balance after simulation
