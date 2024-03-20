@@ -88,7 +88,7 @@ class BasicSim:
         transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
         transactions_revised_dict['receipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['receipient_account']))
         transactions_list = initialize_classes_from_dict(Transaction, transactions_revised_dict)
-        transactions_list_with_time = [(transaction, transaction.time) for transaction in transactions_list]
+        transactions_list_with_time = [(transaction, transaction.day, transaction.time) for transaction in transactions_list]
         self.transactions = set(transactions_list_with_time)
     
     def _simulate_day(self, day: int = 1):
