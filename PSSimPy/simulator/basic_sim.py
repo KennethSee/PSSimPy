@@ -14,6 +14,7 @@ from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
+from PSSimPy.utils.account_utils import load_account_with_transactions
 
 
 class BasicSim:
@@ -88,7 +89,7 @@ class BasicSim:
         transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
         transactions_revised_dict['receipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['receipient_account']))
         transactions_list = initialize_classes_from_dict(Transaction, transactions_revised_dict)
-        transactions_list_with_time = [(transaction, transaction.time) for transaction in transactions_list]
+        transactions_list_with_time = [(transaction, transaction.day, transaction.time) for transaction in transactions_list]
         self.transactions = set(transactions_list_with_time)
     
     def _simulate_day(self, day: int = 1):
@@ -99,6 +100,8 @@ class BasicSim:
             
             # 1. get the transactions pertaining to this time window
             curr_period_transactions = self._gather_transactions_in_window(day, current_time_str, period_end_time_str, self.transactions)
+            for account in self.accounts.values():
+                load_account_with_transactions(account, curr_period_transactions)
             self.outstanding_transactions.update(curr_period_transactions)
             # -> remove transactions from failed banks
             txns_failed_from_bank_failure = {transaction for transaction in self.outstanding_transactions if transaction.involves_failed_bank()}

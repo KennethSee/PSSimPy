@@ -5,6 +5,8 @@ class Account:
         self.owner = owner
         self.balance = balance
         self.posted_collateral = posted_collateral
+        self.txn_in = set()
+        self.txn_out = set()
 
         # Use the kwargs to store additional user-defined attributes
         for key, value in kwargs.items():
