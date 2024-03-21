@@ -108,7 +108,7 @@ class BasicSim:
             for transaction in txns_failed_from_bank_failure:
                 transaction.status_code = TRANSACTION_STATUS_CODES['Failed']
             self.outstanding_transactions -= txns_failed_from_bank_failure
-            
+            curr_period_transactions -= txns_failed_from_bank_failure
             # 2. obtain necessary intraday credit
             liquidity_requirement = defaultdict(float)
             # -> calculate liquidity requirements for all outstanding transactions
@@ -128,8 +128,9 @@ class BasicSim:
             
             # 5. processed transactions printed to log
             # -> transaction log
-            transaction_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions}
-            self.transaction_logger.write(self._extract_logging_details(transaction_to_log, day, current_time_str)) # settled and failed transactions
+            transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions}
+            transactions_to_log.update(txns_failed_from_bank_failure) # add the failed transactions due to bank failure
+            self.transaction_logger.write(self._extract_logging_details(transactions_to_log, day, current_time_str)) # settled and failed transactions
             # -> queueu statistics log
             self.queue_stats_logger.write([(day, current_time_str, self.queue.get_num_txns(), self.queue.get_txn_amount_total())])
             # -> account balance statistics log

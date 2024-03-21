@@ -18,6 +18,7 @@ from PSSimPy.utils.constants import TRANSACTION_STATUS_CODES, TRANSACTION_LOGGER
 from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_time_later, minutes_between
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
+from PSSimPy.utils.account_utils import load_account_with_transactions
 
 class ABMSim:
     """Simulator that supports Agent-Based Modeling"""
@@ -148,6 +149,8 @@ class ABMSim:
             else:
                 # 1b. get the transactions pertaining to this time window
                 curr_period_transactions = self._gather_transactions_in_window(day, current_time_str, period_end_time_str, self.transactions)
+            for account in self.accounts.values():
+                load_account_with_transactions(account, curr_period_transactions)
             self.outstanding_transactions.update(curr_period_transactions)
             # 2. go through outstanding transaction list and identify transactions to settle in current period based on bank strategy
             # remove outstanding transactions where a failed bank is involved
@@ -164,7 +167,7 @@ class ABMSim:
             # 3. obtain necessary intraday credit
             liquidity_requirement = defaultdict(float)
             
-            for txn in curr_period_transactions:
+            for txn in transactions_to_settle:
                 liquidity_requirement[txn.sender_account] += txn.amount
                 
             for acc, requirement in liquidity_requirement.items():
