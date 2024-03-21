@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 from PSSimPy.transaction import Transaction
 from abc import ABC, abstractmethod
 from sortedcontainers import SortedList
@@ -27,7 +27,7 @@ class AbstractQueue(ABC):
 
     @staticmethod
     @abstractmethod
-    def dequeue_criteria(queue_item: tuple[Transaction, int]) -> bool:
+    def dequeue_criteria(queue_item: Tuple[Transaction, int]) -> bool:
         """
         This sets the criteria for whether a transaction is eligible to be dequeued.
         If the transaction passes the checks, it should return true.
@@ -41,10 +41,10 @@ class AbstractQueue(ABC):
         for transaction in transactions:
             self.enqueue(transaction)
     
-    def dequeue(self, queue_item: tuple[Transaction, int]) -> Transaction:
+    def dequeue(self, queue_item: Tuple[Transaction, int]) -> Transaction:
         self.queue.remove(queue_item)
 
-    def begin_dequeueing(self) -> list[Transaction]:
+    def begin_dequeueing(self) -> List[Transaction]:
         items_to_dequeue = []
         for item in self.queue:
             if self.dequeue_criteria(item):
