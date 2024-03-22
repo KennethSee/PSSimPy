@@ -51,7 +51,6 @@ class BasicSim:
         self.transaction_fee_handler = transaction_fee_handler
         self.transaction_fee_rate = transaction_fee_rate
         self.bank_failure = bank_failure
-        self.outstanding_transactions = set()
         
         # load data
         if isinstance(banks, pd.DataFrame):
@@ -102,13 +101,13 @@ class BasicSim:
             curr_period_transactions = self._gather_transactions_in_window(day, current_time_str, period_end_time_str, self.transactions)
             for account in self.accounts.values():
                 load_account_with_transactions(account, curr_period_transactions)
-            self.outstanding_transactions.update(curr_period_transactions)
+
             # -> remove transactions from failed banks
-            txns_failed_from_bank_failure = {transaction for transaction in self.outstanding_transactions if transaction.involves_failed_bank()}
+            txns_failed_from_bank_failure = {transaction for transaction in curr_period_transactions if transaction.involves_failed_bank()}
             for transaction in txns_failed_from_bank_failure:
                 transaction.status_code = TRANSACTION_STATUS_CODES['Failed']
-            self.outstanding_transactions -= txns_failed_from_bank_failure
             curr_period_transactions -= txns_failed_from_bank_failure
+            
             # 2. obtain necessary intraday credit
             liquidity_requirement = defaultdict(float)
             # -> calculate liquidity requirements for all outstanding transactions
