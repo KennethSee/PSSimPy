@@ -17,13 +17,5 @@ class SimpleCollateralized(AbstractCreditFacility):
         account.posted_collateral -= amount
     
     def collect_repayment(self, account: Account) -> None:
-        repaid_amount = 0
-        
-        for i, credit_amount in enumerate(self.used_credit[account.id]):
-            if credit_amount <= account.balance:
-                account.balance -= credit_amount
-                repaid_amount += credit_amount
-                self.used_credit[account.id][i] = 0
-        
-        self.used_credit[account.id] = [x for x in self.used_credit[account.id] if x != 0]
-        account.posted_collateral += repaid_amount
+        account.posted_collateral += self.get_total_credit(account)
+        self.used_credit[account.id] = []

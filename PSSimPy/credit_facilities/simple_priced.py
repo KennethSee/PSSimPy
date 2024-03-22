@@ -17,11 +17,4 @@ class SimplePriced(AbstractCreditFacility):
         account.balance += amount
     
     def collect_repayment(self, account: Account) -> None:
-        for i, credit_amount in enumerate(self.used_credit[account.id]):
-            fee = self.calculate_fee(credit_amount)
-            
-            if credit_amount + fee <= account.balance:
-                account.balance -= (credit_amount + fee)
-                self.used_credit[account.id][i] = 0
-        
-        self.used_credit[account.id] = [x for x in self.used_credit[account.id] if x != 0]
+        self.used_credit[account.id] = []
