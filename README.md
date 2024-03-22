@@ -1,6 +1,6 @@
 # PSSimPy: A Payment and Settlement Systems Simulator Python Library
 
-# Table of Contents
+## Table of Contents
 1. [Introduction](#introduction)
 2. [Usage](#usage)
    - [Quick Start](#quick-start)
