@@ -11,11 +11,9 @@
 6. [License](#license)
 
 ## Introduction
-PSSimPy is a Python library designed to simulate Large Value Payment Systems (LVPS), essential components of global financial infrastructure. The efficient operation of these systems is crucial for executing large transactions and maintaining economic stability. However, understanding LVPS in depth is challenging due to limited access to empirical data for researchers outside central banking circles and the absence of sophisticated tools for analyzing hypothetical changes within these systems.
+PSSimPy is a Python library designed to simulate Large Value Payment Systems (LVPS), essential components of global financial infrastructure. This library serves as an advanced simulation tool that facilitates analysis of synthetic or real LVPS transaction data to test potential modifications and assess impacts on LVPS performance. 
 
-This library serves as an advanced simulation tool, enabling the generation and analysis of synthetic data to test potential modifications and assess impacts on LVPS performance. With the financial landscape continuously evolving, particularly with advancements in payment technologies, there exists a clear need for simulation tools capable of adapting to both current and foreseeable innovations in wholesale payment systems.
-
-PSSimPy fills this gap by offering features that support the simulation of various payment and settlement mechanisms, including those that leverage new technologies. The library provides a comprehensive platform for exploring the dynamics of payment systems, aiding researchers and practitioners in evaluating the implications of different system designs and operational strategies.
+With the financial landscape continuously evolving, particularly with advancements in payment technologies, there exists a clear need for simulation tools capable of adapting to both current and foreseeable innovations in wholesale payment systems. PSSimPy fills this gap by offering features that support the simulation of various payment and settlement mechanisms, including those that leverage new technologies. The library provides a comprehensive platform for exploring the dynamics of payment systems, aiding researchers and practitioners in evaluating the implications of different system designs and operational strategies.
 
 PSSimPy is designed with the flexibility to accommodate a wide range of simulation needs. Its modular architecture enables users to customize simulations to explore the intricacies of payment and settlement processes. As a publicly available tool, PSSimPy invites collaboration and innovation in the study of LVPS, supporting the ongoing development of financial technologies and payment systems.
 
