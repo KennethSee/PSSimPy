@@ -19,23 +19,62 @@ pip install PSSimPy
 
 ## Usage
 ### Quick Start
+First, import the simulator class.
 ```python
 from PSSimPy.simulator import BasicSim
-from PSSimPy.constraint_handler import MinBalanceConstraintHandler
-from PSSimPy.queues import FIFOQueue
-from PSSimPy.credit_facilities import SimplePriced
-from PSSimPy.transaction_fee import FixedTransactionFee
-
-# initialize simulator
-sim = BasicSim(name='my_lvps_sim', banks=banks, accounts=accounts, transactions=transactions, num_days=1, open_time='08:00', close_time='17:00', \
-txn_arrival_prob=0.5, txn_amount_range=(1, 100), constraint_handler=MinBalanceConstraintHandler(), queue=FIFOQueue(), credit_facility=SimplePriced(), \
-transaction_fee_handler=FixedTransactionFee())
-# execute simulation
+```
+Define the banks, accounts, and transactions. They are defined as dictionaries here, but they can be Pandas dataframes as well.
+```python
+banks = {'name': ['b1', 'b2', 'b3']}
+accounts = {'id': ['acc1', 'acc2', 'acc3'], 'owner': ['b1', 'b2', 'b3'], 'balance': [100, 100, 100], 'posted_collateral': [0, 0, 0]}
+transactions = {'sender_account': ['acc1', 'acc2', 'acc3'], 
+                 'receipient_account': ['acc2', 'acc3', 'acc1'], 
+                 'amount': [1, 1, 1], 
+                 'time': ['08:00', '08:10', '08:30']}
+```
+Initialize and run the simulator with the default settings. The name will be your simulation's unique identifier.
+```python
+sim = BasicSim(name='my_first_lvps_sim', banks=banks, accounts=accounts, transactions=transactions)
 sim.run()
 ```
+The simulation outputs can be retrieved from the CSV files generated in the same folder where you run your Python code.
 ### Stress Test
 
 ### Agent-Based Modeling
+Agent-based models are supported by modeling Banks as strategic agents. Users can inherit the Bank class and overwrite the _strategy_ function to define a new strategy.
+```python
+class PettyBank(Bank):
+    """This class of banks will not settle transactions to another bank's account if the counter party has an outstanding transaction to this bank that is not yet settled."""
+
+    def __init__(self, name, strategy_type='Petty', **kwargs):
+        super().__init__(name, strategy_type, **kwargs)
+    
+    # overwrite strategy
+    def strategy(self, txns_to_settle: set, all_outstanding_transactions: set, sim_name: str, day: int, current_time: str, queue: AbstractQueue) -> set:
+        # identify the counterparty bank of outstanding transactions where this bank is the recipient bank
+        counterparties_with_outstanding = {transaction.sender_account.owner.name for transaction in all_outstanding_transactions if transaction.receipient_account.owner.name == self.name}
+        # exclude transactions which involves paying the identified counterparties
+        chosen_txns_to_settle = {transaction for transaction in txns_to_settle if transaction.receipient_account.owner.name not in counterparties_with_outstanding}
+        return chosen_txns_to_settle
+```
+The agent-based simulation can then be conducted by fitting and running the ABMSim simulator class. Note the presence of the "strategy_mapping" argument. This should be a dictionary of strategy types to customized child Bank classes. This dictionary will then be used to map each bank's defined strategy type to the type of Bank class they should be initialized as.
+```python
+from PSSimPy.simulator import ABMSim
+
+# redefine the banks variable to specify each bank's strategy type
+# no change required to the accounts and transactions variables
+banks = {'name': ['b1', 'b2', 'b3'], 'strategy_type': ['Petty', 'Petty', 'Petty']}
+
+simulator_name = 'Petty ABM'
+abm_sim = ABMSim(simulator_name, banks=banks, accounts=accounts, transactions=transactions, strategy_mapping={'Petty': PettyBank})
+abm_sim.run()
+```
+ABMSim also supports endogenously generated transactions. To utilize this feature, the "transactions" argument can be omitted and be replaced by the "txn_arrival_prob" and "txn_amount_range" arguments. "txn_arrival_prob" should be a floating number between 0 and 1 to indicate the probability of a transaction being generated at each time period between two accounts owned by different banks. "txn_amount_range" should be a tuple of the minimum and maximum values of each transaction amount. The simulator will randomly generate a transaction value within the defined range for each generated transaction.
+```python
+abm_sim = ABMSim(name='Generated Transactions', banks=banks, accounts=accounts, txn_arrival_prob=0.5, txn_amount_range=(1, 100))
+# execute simulation
+abm_sim.run()
+```
 
 ## Features and API Overview
 
