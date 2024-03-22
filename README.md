@@ -57,7 +57,9 @@ class PettyBank(Bank):
         super().__init__(name, strategy_type, **kwargs)
     
     # overwrite strategy
-    def strategy(self, txns_to_settle: set, all_outstanding_transactions: set, sim_name: str, day: int, current_time: str, queue: AbstractQueue) -> set:
+    # note that the parameters defined here are inherited from the Bank class' strategy function
+    # not all the parameters may be used but they have been included to allow strategies to access a comprehensive set of information
+    def strategy(self, txns_to_settle: set, all_outstanding_transactions: set, sim_name: str, day: int, current_time: str, queue) -> set:
         # identify the counterparty bank of outstanding transactions where this bank is the recipient bank
         counterparties_with_outstanding = {transaction.sender_account.owner.name for transaction in all_outstanding_transactions if transaction.receipient_account.owner.name == self.name}
         # exclude transactions which involves paying the identified counterparties
