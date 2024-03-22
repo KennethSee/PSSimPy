@@ -8,6 +8,7 @@
    - [Agent-Based Modeling](#agent-based-modeling)
 4. [Features and API Overview](#features-and-api-overview)
 5. [Contributing](#contributing)
+6. [License](#license)
 
 ## Introduction
 
@@ -42,3 +43,8 @@ sim.run()
 The main objective of this project is to democratize LVPS research. Anybody is welcome to submit code that could make our library more efficient and comprehensive. We especially welcome contributions of implemented abstract classes to be included as part of the library's offerings.
 
 Contributors can make a Pull request for the development team to review proposed code changes. Individuals who are interested in becoming part of the core development team can email Kenneth at see.k@u.nus.edu.
+
+## License
+PSSimPy is made available under the MIT License, which provides a permissive free software license that allows for reuse within proprietary software provided all copies of the licensed software include a copy of the MIT License terms. This offers both flexibility and freedom to users and developers of PSSimPy.
+
+For the full license text, please refer to the LICENSE file included in the distribution or visit https://opensource.org/licenses/MIT.
