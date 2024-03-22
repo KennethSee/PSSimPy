@@ -41,7 +41,7 @@ The simulation outputs can be retrieved from the CSV files generated in the same
 ### Stress Test
 
 ### Agent-Based Modeling
-Agent-based models are supported by modeling Banks as strategic agents. Users can inherit the Bank class and overwrite the _strategy_ function to define a new strategy.
+Agent-based models are supported by modeling Banks as strategic agents. Users can inherit the Bank class and overwrite the _strategy_ function to define a new strategy. Here, we create _PettyBank_ as an example of a strategic bank that will not make outgoing payments to a counterparty bank that owes it money.
 ```python
 class PettyBank(Bank):
     """This class of banks will not settle transactions to another bank's account if the counter party has an outstanding transaction to this bank that is not yet settled."""
