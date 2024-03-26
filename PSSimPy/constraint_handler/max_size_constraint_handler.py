@@ -18,14 +18,14 @@ class MaxSizeConstraintHandler(AbstractConstraintHandler):
             # Split the transaction
             txn1 = Transaction(
                 sender_account=transaction.sender_account,
-                receipient_account=transaction.receipient_account,
+                recipient_account=transaction.recipient_account,
                 amount=self.max_txn_size,
                 priority=transaction.priority,
                 **kwargs
             )
             txn2 = Transaction(
                 sender_account=transaction.sender_account,
-                receipient_account=transaction.receipient_account,
+                recipient_account=transaction.recipient_account,
                 amount=transaction.amount - self.max_txn_size,
                 priority=transaction.priority,
                 **kwargs

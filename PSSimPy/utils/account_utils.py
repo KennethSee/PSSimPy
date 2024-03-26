@@ -12,7 +12,7 @@ def load_account_with_transactions(account: Account, transactions: set):
     for transaction in transactions:
         if transaction.sender_account.id == account.id:
             txn_out.add(transaction)
-        elif transaction.receipient_account.id == account.id:
+        elif transaction.recipient_account.id == account.id:
             txn_in.add(transaction)
     account.txn_in.update(txn_in)
     account.txn_out.update(txn_out)

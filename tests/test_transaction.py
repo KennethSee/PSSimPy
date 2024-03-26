@@ -17,7 +17,7 @@ class TestTransaction(unittest.TestCase):
 
     def test_initialization(self):
         self.assertEqual(self.txn1.sender_account, self.acc1)
-        self.assertEqual(self.txn1.receipient_account, self.acc2)
+        self.assertEqual(self.txn1.recipient_account, self.acc2)
         self.assertEqual(self.txn1.amount, 100)
         self.assertEqual(self.txn1.priority, 1)
         self.assertEqual(self.txn2.priority, 2)

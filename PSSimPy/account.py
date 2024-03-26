@@ -12,6 +12,6 @@ class Account:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    def transfer_to(self, receipient: 'Account', amount: float) -> None:
+    def transfer_to(self, recipient: 'Account', amount: float) -> None:
         self.balance -= amount
-        receipient.balance += amount
+        recipient.balance += amount

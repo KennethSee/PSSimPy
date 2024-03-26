@@ -86,7 +86,7 @@ class BasicSim:
         # load transactions
         transactions_revised_dict = transactions_dict.copy()
         transactions_revised_dict['sender_account'] = list(map(lambda x: self.accounts[x], transactions_dict['sender_account']))
-        transactions_revised_dict['receipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['receipient_account']))
+        transactions_revised_dict['recipient_account'] = list(map(lambda x: self.accounts[x], transactions_dict['recipient_account']))
         transactions_list = initialize_classes_from_dict(Transaction, transactions_revised_dict)
         transactions_list_with_time = [(transaction, transaction.day, transaction.time) for transaction in transactions_list]
         self.transactions = set(transactions_list_with_time)
@@ -168,7 +168,7 @@ class BasicSim:
             day,
             time,
             transaction.sender_account.id,
-            transaction.receipient_account.id,
+            transaction.recipient_account.id,
             transaction.amount,
             'Success' if transaction.status_code == TRANSACTION_STATUS_CODES['Success'] else 'Failed'
         ) for transaction in transactions]

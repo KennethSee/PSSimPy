@@ -16,9 +16,9 @@ class Transaction:
         cls._instances.add(instance)
         return instance
 
-    def __init__(self, sender_account: Account, receipient_account: Account, amount: float, priority: int=1, **kwargs):
+    def __init__(self, sender_account: Account, recipient_account: Account, amount: float, priority: int=1, **kwargs):
         self.sender_account = sender_account
-        self.receipient_account = receipient_account
+        self.recipient_account = recipient_account
         self.amount = amount
         self.priority = priority
         self.status_code = TRANSACTION_STATUS_CODES['Open']
@@ -36,8 +36,8 @@ class Transaction:
             print(f"Invalid status: '{status}'. Please provide a valid transaction status.")
 
     def involves_failed_bank(self) -> bool:
-        """Checks if either the sender or receipient accounts belongs to a failed bank"""
-        return is_failed_account(self.sender_account) or is_failed_account(self.receipient_account)
+        """Checks if either the sender or recipient accounts belongs to a failed bank"""
+        return is_failed_account(self.sender_account) or is_failed_account(self.recipient_account)
 
     @classmethod
     def get_instances(cls):
