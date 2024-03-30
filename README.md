@@ -11,11 +11,9 @@
 6. [License](#license)
 
 ## Introduction
-PSSimPy is a Python library designed to simulate Large Value Payment Systems (LVPS), essential components of global financial infrastructure. This library serves as an advanced simulation tool that facilitates analysis of synthetic or real LVPS transaction data to test potential modifications and assess impacts on LVPS performance. 
+PSSimPy is a Python library designed to simulate Large Value Payment Systems (LVPS). This library serves as an advanced simulation tool that facilitates analysis of synthetic or real LVPS transaction data to test potential modifications and assess impacts on LVPS performance. 
 
-With the financial landscape continuously evolving, particularly with advancements in payment technologies, there exists a clear need for simulation tools capable of adapting to both current and foreseeable innovations in wholesale payment systems. PSSimPy fills this gap by offering features that support the simulation of various payment and settlement mechanisms, including those that leverage new technologies. The library provides a comprehensive platform for exploring the dynamics of payment systems, aiding researchers and practitioners in evaluating the implications of different system designs and operational strategies.
-
-PSSimPy is designed with the flexibility to accommodate a wide range of simulation needs. Its modular architecture enables users to customize simulations to explore the intricacies of payment and settlement processes. As a publicly available tool, PSSimPy invites collaboration and innovation in the study of LVPS, supporting the ongoing development of financial technologies and payment systems.
+This library is designed with the flexibility to accommodate a wide range of simulation needs, catering to both academic researchers and industry/government analysts. Its modular architecture enables users to customize simulations to explore the intricacies of payment and settlement processes. This is a publicly available tool and we welcome any form of collaboration and feedback.
 
 ## Getting Started
 ```bash
@@ -33,7 +31,7 @@ Define the banks, accounts, and transactions. They are defined as dictionaries h
 banks = {'name': ['b1', 'b2', 'b3']}
 accounts = {'id': ['acc1', 'acc2', 'acc3'], 'owner': ['b1', 'b2', 'b3'], 'balance': [100, 100, 100], 'posted_collateral': [0, 0, 0]}
 transactions = {'sender_account': ['acc1', 'acc2', 'acc3'], 
-                 'receipient_account': ['acc2', 'acc3', 'acc1'], 
+                 'recipient_account': ['acc2', 'acc3', 'acc1'], 
                  'amount': [1, 1, 1], 
                  'time': ['08:00', '08:10', '08:30']}
 ```
@@ -44,6 +42,12 @@ sim.run()
 ```
 The simulation outputs can be retrieved from the CSV files generated in the same folder where you run your Python code.
 ### Stress Test
+Bank failures can be incorporated into the model to observe the dynamics of the system when one or more bank fails at specific points in the scenario. To specify bank failure(s), define a dictionary to capture when the relevant bank fails. The dictionary's key should be the day of the failure and the values would be a list of tuples specifying the exact failure time and affected bank name. This dictionary should then be included as one of the parameters in the simulator's parameters.
+
+```python
+BANK_FAILURE =  {1:[('08:15', 'b1'), ('13:00', 'b2')]}
+stress_sim = BasicSim(..., bank_failure=BANK_FAILURE)
+```
 
 ### Agent-Based Modeling
 Agent-based models are supported by modeling Banks as strategic agents. Users can inherit the Bank class and overwrite the _strategy_ function to define a new strategy. Here, we create _PettyBank_ as an example of a strategic bank that will not make outgoing payments to a counterparty bank that owes it money.
@@ -61,9 +65,9 @@ class PettyBank(Bank):
     # not all the parameters may be used but they have been included to allow strategies to access a comprehensive set of information
     def strategy(self, txns_to_settle: set, all_outstanding_transactions: set, sim_name: str, day: int, current_time: str, queue) -> set:
         # identify the counterparty bank of outstanding transactions where this bank is the recipient bank
-        counterparties_with_outstanding = {transaction.sender_account.owner.name for transaction in all_outstanding_transactions if transaction.receipient_account.owner.name == self.name}
+        counterparties_with_outstanding = {transaction.sender_account.owner.name for transaction in all_outstanding_transactions if transaction.recipient_account.owner.name == self.name}
         # exclude transactions which involves paying the identified counterparties
-        chosen_txns_to_settle = {transaction for transaction in txns_to_settle if transaction.receipient_account.owner.name not in counterparties_with_outstanding}
+        chosen_txns_to_settle = {transaction for transaction in txns_to_settle if transaction.recipient_account.owner.name not in counterparties_with_outstanding}
         return chosen_txns_to_settle
 ```
 The agent-based simulation can then be conducted by fitting and running the ABMSim simulator class. Note the presence of the "strategy_mapping" argument. This should be a dictionary of strategy types to customized child Bank classes. This dictionary will then be used to map each bank's defined strategy type to the type of Bank class they should be initialized as.
