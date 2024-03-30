@@ -45,7 +45,7 @@ The simulation outputs can be retrieved from the CSV files generated in the same
 Bank failures can be incorporated into the model to observe the dynamics of the system when one or more bank fails at specific points in the scenario. To specify bank failure(s), define a dictionary to capture when the relevant bank fails. The dictionary's key should be the day of the failure and the values would be a list of tuples specifying the exact failure time and affected bank name. This dictionary should then be included as one of the parameters in the simulator's parameters.
 
 ```python
-BANK_FAILURE =  {1:[('08:15', 'b1'), ('13:00', 'b2')]}
+BANK_FAILURE =  {1:[('08:15', 'b1'), ('13:00', 'b2')]} # defining that on day 1, bank "b1" fails at 08:15 and bank "b2" fails at 13:00
 stress_sim = BasicSim(..., bank_failure=BANK_FAILURE)
 ```
 
