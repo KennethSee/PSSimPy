@@ -6,9 +6,15 @@
    - [Quick Start](#quick-start)
    - [Stress Test](#stress-test)
    - [Agent-Based Modeling](#agent-based-modeling)
-4. [Features and API Overview](#features-and-api-overview)
-5. [Contributing](#contributing)
-6. [License](#license)
+3. [Customization Guide](#customization-guide)
+   - [Constraint Handler](#constraint-handler)
+   - [Queue](#queue)
+   - [Credit Facility](#credit-facility)
+   - [Transaction Fee](#transaction-fee)
+   - [Bank](#bank)
+5. [Features and API Overview](#features-and-api-overview)
+6. [Contributing](#contributing)
+7. [License](#license)
 
 ## Introduction
 PSSimPy is a Python library designed to simulate Large Value Payment Systems (LVPS). This library serves as an advanced simulation tool that facilitates analysis of synthetic or real LVPS transaction data to test potential modifications and assess impacts on LVPS performance. 
@@ -89,7 +95,54 @@ abm_sim = ABMSim(name='Generated Transactions', banks=banks, accounts=accounts, 
 abm_sim.run()
 ```
 
+## Customization Guide
+
+This section details the classes that can be customized for a more tailored simulation.
+
+### Constraint Handler
+
+Transactions pass through a constraint handler before it is sent to a queue. The constraint handler can be configured to have custom constraints and handling logic. To implement a custom constraint handler, you will need to create a subclass that inherits the `AbstractConstraintHandler` class and implement the following abstract method in the subclass:
+
+* `process_transaction(self, transaction)`: For a given transaction, if it passes the constraint check, it should be added to the `self.passed_transactions` list to indicate that it should be sent for further processing. If the transaction fails the constraint check, it should update the transaction status to "Failed".
+
+The constraint handler can handle both hard and soft failures. Hard failure means that if the transaction fails to meet the constraint(s) defined, it will immediately be updated as a failed transaction. `MinBalanceContraintHandler` can be referred to as an example of a hard failure implementation. Soft failure means that if the transaction is unable to meet the constraint(s) defined, it can be modified and reran through the constraint handler until it complies with the constraint(s). `MaxSizeConstraintHandler` can be referred to as an example of a soft failure implementation. Both examples can be found in the constraint_handler folder in the code.
+
+### Queue
+
+This pertains to the transaction queue used in the simulation. To implement a custom queue, you will need to create a subclass that inherits the `AbstractQueue` class and implement the following abstract methods in the subclass:
+
+* `sorting_logic(queue_item)`: This should be implemented to return an integer that represents the priority of the transaction to be inserted into the queue, where a lower integer represents a higher priority.
+* `dequeue_criteria(queue_item)`: Defines conditions under which transactions are dequeued. Return True for transactions that meet the dequeue criteria. 
+
+Note that `queue_item` is a tuple of a Transaction class and an integer representing the current period, where the higher the integer, the later the period in the simulation day.
+
+Please refer to premade implementations (`DirectQueue`, `FIFOQueue`, `PriorityQueue`) within the queues folder in the code base for examples.
+
+### Credit Facility
+
+The `AbstractCreditFacility` class provides a framework for managing credit facilities, including lending credit, collecting repayments, and calculating fees. It is designed to be extended with custom logic specific to different credit systems. To create a custom credit facility, extend `AbstractCreditFacility` and implement the following abstract methods:
+
+* `calculate_fee()`: Implement this method to define how the fee amount for credit is calculated. This method should return the fee amount as a float.
+* `lend_credit(account, amount)`: Define the logic for lending credit to an account. This includes updating account balances and tracking lent amounts. This method does not return a value.
+* `collect_repayment(account)`: Implement repayment collection for an account. This should adjust account balances and update the tracking of lent amounts and fees. This method does not return a value.
+
+### Transaction Fee
+
+Transaction fees are recorded for each processed transaction. `FixedTransactionFee` has been provided as a class that can be used to calculate the fee based on a fixed rate float value provided in the simulation parameters. However, if a dynamic transaction fee logic (e.g. different rates applied to transactions settled at different times in the day) is required, you will need to implement a subclass that inherits the `AbstractTransactionFee` class and implement the following abstract method in the subclass:
+
+* `calculate_fee(self, txn_amount, time, rate)`: Calculates and returns the fee that should recorded for the given transaction amount. The rate argument can either be a float value or a dictionary with a string (to represent the effective time) as the key and a float (the rate associated with the respective key) as the value.
+
+### Bank
+
+The `Bank` class provides a basic implementation suitable for most use cases. However, in agent-based modeling, different banks may employ diverse strategies. This guide explains how to inherit from the Bank class to define custom strategies that banks might use in response to different simulation scenarios. To define a type of bank with a specific strategy, create a new class that extends `Bank`, allowing you to override and redefine the following method:
+
+* `strategy(self, txns_to_settle, sim_name, day, current_time, queue)`: Implement this method to determine how for a given set of transactions that a bank needs to settle, which transactions it decides to proceed with settlement. The transactions to be sent for settlement should be returned as a set. Not all the parameters need to be utilized - they are provided to allow for the strategy to leverage a comprehensive set of information present in the simulation and can be used as needed.
+
+Refer to the `PettyBank` class within the Agent-Based Modeling subsection above for an example of an implementation of a bank with a custom strategy.
+
 ## Features and API Overview
+
+
 
 ## Contributing
 The main objective of this project is to democratize LVPS research. Anybody is welcome to submit code that could make our library more efficient and comprehensive. We especially welcome contributions of implemented abstract classes to be included as part of the library's offerings.
