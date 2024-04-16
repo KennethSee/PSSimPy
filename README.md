@@ -142,7 +142,34 @@ Refer to the `PettyBank` class within the Agent-Based Modeling subsection above 
 
 ## Features and API Overview
 
+### `BasicSim` Class
 
+The `BasicSim` class supports basic simulation functionalities for modeling payment and settlement systems. It is initialized by defining operational parameters and simulation entities such as banks, accounts, and transactions. Users can configure for bank failures to assess the impact on financial system stability. Each simulation run processes transactions daily within predefined operational hours and processing windows, utilizing a constraint, queue, credit facility, and transaction fee handlers. Additionally, the class records detailed transaction logs, capturing essential data and statistics for in-depth post-simulation analysis.
+
+**Attributes**
+
+| Attribute                 | Type                                                          | Description                                                                                                   |
+|---------------------------|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| `name`                    | `str`                                                         | The name of the simulation, used as a unique identifier.                                                      |
+| `banks`                   | `Union[pd.DataFrame, Dict[str, List]]`                        | Data structure containing information about the banks involved in the simulation.                             |
+| `accounts`                | `Union[pd.DataFrame, Dict[str, List]]`                        | Data structure listing the accounts within the simulation including their balances and ownership.             |
+| `transactions`            | `Union[pd.DataFrame, Dict[str, List]]`                        | List of transactions to be processed during the simulation.                                                   |
+| `open_time`               | `str` (default: '08:00')                                      | The opening time for each simulation day, formatted as HH:MM.                                                 |
+| `close_time`              | `str` (default: '17:00')                                      | The closing time for each simulation day, formatted as HH:MM.                                                 |
+| `processing_window`       | `int` (default: 15)                                           | Duration in minutes of each processing window within a simulation day.                                        |
+| `num_days`                | `int` (default: 1)                                            | The number of days the simulation runs.                                                                       |
+| `constraint_handler`      | `AbstractConstraintHandler` (default: `PassThroughHandler()`) | An instance of a constraint handler that processes transactions before they are queued.                       |
+| `queue`                   | `AbstractQueue` (default: `DirectQueue()`)                    | The queue system used to manage the order and processing of transactions.                                     |
+| `credit_facility`         | `AbstractCreditFacility` (default: `SimplePriced()`)          | Manages credit allocations and repayments during the simulation.                                              |
+| `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | Handles the calculation and application of transaction fees based on a specified rate.                        |
+| `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate at which transaction fees are calculated, either as a flat rate or varying by time or other factors. |
+| `bank_failure`            | `Dict[int, List[Tuple[str, str]]]` (optional)                 | Specifies days and times when particular banks are set to fail within the simulation.                         |
+
+**Methods**
+
+| Method  | Parameters | Return Type | Description                                           |
+|---------|------------|-------------|-------------------------------------------------------|
+| `run()` | None       | None        | Runs the simulation for the specified number of days. |
 
 ## Contributing
 The main objective of this project is to democratize LVPS research. Anybody is welcome to submit code that could make our library more efficient and comprehensive. We especially welcome contributions of implemented abstract classes to be included as part of the library's offerings.
