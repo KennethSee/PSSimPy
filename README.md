@@ -148,22 +148,22 @@ The `BasicSim` class supports basic simulation functionalities for modeling paym
 
 **Attributes**
 
-| Attribute                 | Type                                                          | Description                                                                                                   |
-|---------------------------|---------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| `name`                    | `str`                                                         | The name of the simulation, used as a unique identifier.                                                      |
-| `banks`                   | `Union[pd.DataFrame, Dict[str, List]]`                        | Data structure containing information about the banks involved in the simulation.                             |
-| `accounts`                | `Union[pd.DataFrame, Dict[str, List]]`                        | Data structure listing the accounts within the simulation including their balances and ownership.             |
-| `transactions`            | `Union[pd.DataFrame, Dict[str, List]]`                        | List of transactions to be processed during the simulation.                                                   |
-| `open_time`               | `str` (default: '08:00')                                      | The opening time for each simulation day, formatted as HH:MM.                                                 |
-| `close_time`              | `str` (default: '17:00')                                      | The closing time for each simulation day, formatted as HH:MM.                                                 |
-| `processing_window`       | `int` (default: 15)                                           | Duration in minutes of each processing window within a simulation day.                                        |
-| `num_days`                | `int` (default: 1)                                            | The number of days the simulation runs.                                                                       |
-| `constraint_handler`      | `AbstractConstraintHandler` (default: `PassThroughHandler()`) | An instance of a constraint handler that processes transactions before they are queued.                       |
-| `queue`                   | `AbstractQueue` (default: `DirectQueue()`)                    | The queue system used to manage the order and processing of transactions.                                     |
-| `credit_facility`         | `AbstractCreditFacility` (default: `SimplePriced()`)          | Manages credit allocations and repayments during the simulation.                                              |
-| `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | Handles the calculation and application of transaction fees based on a specified rate.                        |
-| `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate at which transaction fees are calculated, either as a flat rate or varying by time or other factors. |
-| `bank_failure`            | `Dict[int, List[Tuple[str, str]]]` (optional)                 | Specifies days and times when particular banks are set to fail within the simulation.                         |
+| Attribute                 | Description                                                                 |
+|---------------------------|-----------------------------------------------------------------------------|
+| `name`                    | The name of the simulation, used as a unique identifier.                    |
+| `banks`                   | List of banks involved in the simulation.                                   |
+| `accounts`                | List of accounts within the simulation.                                     |
+| `transactions`            | List of transactions to be processed during the simulation.                 |
+| `open_time`               | The opening time for each simulation day, formatted as HH:MM.               |
+| `close_time`              | The closing time for each simulation day, formatted as HH:MM.               |
+| `processing_window`       | Duration in minutes of each processing window within a simulation day.      |
+| `num_days`                | The number of days the simulation runs.                                     |
+| `constraint_handler`      | A handler that processes transactions before they are queued.               |
+| `queue`                   | A queue system used to manage the order and processing of transactions.     |
+| `credit_facility`         | A mechanism for managing credit allocations and repayments.                 |
+| `transaction_fee_handler` | A handler to calculate and apply of transaction fees based on a given rate. |
+| `transaction_fee_rate`    | The rate at which transaction fees are calculated                           |
+| `bank_failure`            | Days and times when particular banks are set to fail during the simulation. |
 
 **Methods**
 
