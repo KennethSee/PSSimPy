@@ -161,9 +161,42 @@ The `BasicSim` class supports basic simulation functionalities for modeling paym
 | `constraint_handler`      | `AbstractConstraintHandler` (default: `PassThroughHandler()`) | A handler that processes transactions before they are queued.               |
 | `queue`                   | `AbstractQueue` (default: `DirectQueue()`)                    | A queue system used to manage the order and processing of transactions.     |
 | `credit_facility`         | `AbstractCreditFacility` (default: `SimplePriced()`)          | A mechanism for managing credit allocations and repayments.                 |
-| `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | A handler to calculate and apply of transaction fees based on a given rate. |
-| `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate at which transaction fees are calculated                           |
+| `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | A handler to calculate and apply transaction fees based on a given rate. |
+| `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate(s) at which transaction fees are calculated                        |
 | `bank_failure`            | `Dict[int, List[Tuple[str, str]]]` (optional)                 | Days and times when particular banks are set to fail during the simulation. |
+
+**Methods**
+
+| Method  | Parameters | Return Type | Description                                           |
+|---------|------------|-------------|-------------------------------------------------------|
+| `run()` | None       | None        | Runs the simulation for the specified number of days. |
+
+### `ABMSim` Class
+
+The `ABMSim` class is similar to the `BasicSim` class, but with a specific purpose to support agent-based simulation functionalities. Notably, it allows users to define custom bank strategies. This class allows users to either provide a list of transactions as input (the same way as `BasicSim`) or have the simulation generate the transactions randomly. The latter is achieved by omitting the `transactions` parameter and defining the `txn_arrival_prob`, `txn_amount_range` and `txn_priority_range` (optional) parameters.
+
+**Attributes**
+
+| Attribute                 | Type                                                          | Description                                                                 |
+|---------------------------|---------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `name`                    | `str`                                                         | The name of the simulation, used as a unique identifier.                    |
+| `banks`                   | `Union[pd.DataFrame, Dict[str, List]]`                        | List of banks involved in the simulation.                                   |
+| `accounts`                | `Union[pd.DataFrame, Dict[str, List]]`                        | List of accounts within the simulation.                                     |
+| `transactions`            | `Union[pd.DataFrame, Dict[str, List]]` (optional)             | List of transactions to be processed during the simulation.                 |
+| `strategy_mapping`        | `dict`  (optional)                                            | The mapping of strategy types to their implemented classes.                 |
+| `open_time`               | `str` (default: '08:00')                                      | The opening time for each simulation day, formatted as HH:MM.               |
+| `close_time`              | `str` (default: '17:00')                                      | The closing time for each simulation day, formatted as HH:MM.               |
+| `processing_window`       | `int` (default: 15)                                           | Duration in minutes of each processing window within a simulation day.      |
+| `num_days`                | `int` (default: 1)                                            | The number of days the simulation runs.                                     |
+| `constraint_handler`      | `AbstractConstraintHandler` (default: `PassThroughHandler()`) | A handler that processes transactions before they are queued.               |
+| `queue`                   | `AbstractQueue` (default: `DirectQueue()`)                    | A queue system used to manage the order and processing of transactions.     |
+| `credit_facility`         | `AbstractCreditFacility` (default: `SimplePriced()`)          | A mechanism for managing credit allocations and repayments.                 |
+| `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | A handler to calculate and apply transaction fees based on a given rate. |
+| `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate(s) at which transaction fees are calculated                        |
+| `bank_failure`            | `Dict[int, List[Tuple[str, str]]]` (optional)                 | Days and times when particular banks are set to fail during the simulation. |
+| `txn_arrival_prob`        | `float` (optional)                                            | The probability that a transaction between two accounts occurs in a period. |
+| `txn_amount_range`        | `Tuple[int, int]` (optional)                                  | The range of values a generated transaction could have.                     |
+| `txn_priority_range`      | `Tuple[int, int]` (default: (1, 1))                           | The range of values a generated transaction's priority could have.          |
 
 **Methods**
 
