@@ -151,7 +151,7 @@ class BasicSim:
             self.env = simpy.Environment()
             self.env.process(self._simulate_day(i+1))
             self.env.run(until=minutes_between(self.open_time, self.close_time))
-            self.credit_facility.collect_all_repayment(self.accounts.values())
+            self.credit_facility.collect_all_repayment(i, self.accounts.values())
             # TODO EOD handling - not implemented for now
             
     @staticmethod

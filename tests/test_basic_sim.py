@@ -3,14 +3,17 @@ import unittest
 import pandas as pd
 
 import PSSimPy
-from PSSimPy.credit_facilities import SimplePriced
+from PSSimPy.credit_facilities import SimplePriced, SimpleCollateralized
 from PSSimPy.simulator import BasicSim
 from PSSimPy.utils import is_valid_24h_time
 
 class TestBasicSim(unittest.TestCase):
     def setUp(self) -> None:
         self.banks = {'name': ['b1', 'b2', 'b3'], 'bank_code': ['ABC', 'KLM', 'XYZ']}
-        self.accounts = {'id': ['acc1', 'acc2', 'acc3'], 'owner': ['b1', 'b2', 'b3'], 'balance': [200, 750, 1000]}
+        self.accounts = {'id': ['acc1', 'acc2', 'acc3'],
+                         'owner': ['b1', 'b2', 'b3'],
+                         'balance': [200, 750, 1000],
+                         'posted_collateral': [150, 0, 0]}
         self.transactions = pd.DataFrame([
             {'sender_account': 'acc1', 'recipient_account': 'acc2', 'amount': 250, 'day':1, 'time': '08:50'},
             {'sender_account': 'acc2', 'recipient_account': 'acc3', 'amount': 100, 'day':1, 'time': '09:00'},
@@ -76,9 +79,9 @@ class TestBasicSim(unittest.TestCase):
             self.assertEqual(self.transactions['amount'][i], trx.amount)
             self.assertEqual(self.transactions['time'][i], trx.time)
         
-    def test_run(self):
+    def test_run_simple_priced(self):
         # reset credit facility as it doesn't reset after simulation in other test cases
-        self.sim.credit_facility = SimplePriced()
+        self.sim.credit_facility = SimplePriced(base_fee=10, base_rate=1.5)
         self.sim.run()
         
         for trx, _, _ in self.sim.transactions: 
@@ -90,9 +93,40 @@ class TestBasicSim(unittest.TestCase):
         self.assertEqual(self.sim.accounts['acc3'].balance, 1000 + 100 + 110)
         
         # used credit facility after simulation
-        # self.assertEqual(self.sim.credit_facility.used_credit['acc1'], [50.0, 110.0])
-        # self.assertEqual(self.sim.credit_facility.used_credit['acc2'], [])
-        # self.assertEqual(self.sim.credit_facility.used_credit['acc3'], [])
+        self.assertEqual(self.sim.credit_facility.used_credit['acc1'], [50.0, 110.0])
+        self.assertEqual(self.sim.credit_facility.used_credit['acc2'], [])
+        self.assertEqual(self.sim.credit_facility.used_credit['acc3'], [])
+
+        # history of credit facility
+        self.assertEqual(self.sim.credit_facility.history['acc1'], [(0, 50.+110., (50*1.5+10)+(110*1.5+10))])
+        self.assertEqual(self.sim.credit_facility.history['acc2'], [(0, 0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc3'], [(0, 0, 0)])
+        
+    def test_run_simple_collateralized(self):
+        # reset credit facility as it doesn't reset after simulation in other test cases
+        self.sim.credit_facility = SimpleCollateralized()
+        self.sim.run()
+        
+        for trx, _, _ in self.sim.transactions: 
+            self.assertNotEqual(trx.status_code, 0)
+        
+        # each account's balance after simulation, acc1 has negative balance (no constraint handler for it)
+        self.assertEqual(self.sim.accounts['acc1'].balance, 200 + 50 - 250 - 110)
+        self.assertEqual(self.sim.accounts['acc2'].balance, 750 + 250 - 100)
+        self.assertEqual(self.sim.accounts['acc3'].balance, 1000 + 100 + 110)
+        
+        # acc1 posted collateral, used 50 from 150
+        self.assertEqual(self.sim.accounts['acc1'].posted_collateral, 100)
+
+        # used credit facility after simulation
+        self.assertEqual(self.sim.credit_facility.used_credit['acc1'], [50.0])
+        self.assertEqual(self.sim.credit_facility.used_credit['acc2'], [])
+        self.assertEqual(self.sim.credit_facility.used_credit['acc3'], [])
+
+        # history of credit facility
+        self.assertEqual(self.sim.credit_facility.history['acc1'], [(0, 50.0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc2'], [(0, 0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc3'], [(0, 0, 0)])
     
     def test_logger(self):
         self.tearDown()

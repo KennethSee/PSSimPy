@@ -9,12 +9,19 @@ class SimplePriced(AbstractCreditFacility):
         self.base_fee = base_fee
         self.base_rate = base_rate
         
-    def calculate_fee(self, credit_amount: float) -> float:
-        return credit_amount * self.base_rate + self.base_fee
+    def calculate_fee(self, amount: float) -> float:
+        return amount * self.base_rate + self.base_fee
     
     def lend_credit(self, account: Account, amount: float) -> float:
         self.used_credit[account.id].append(amount)
         account.balance += amount
     
     def collect_repayment(self, account: Account) -> None:
-        self.used_credit[account.id] = []
+        # repay credit facility if possible
+        for i, amount in enumerate(self.used_credit[account.id]):
+            if amount < account.balance:
+                account.balance -= amount
+                self.used_credit[account.id][i] = 0
+
+        # remove repaid credit facility
+        self.used_credit[account.id] = [cr for cr in self.used_credit[account.id] if cr != 0]
