@@ -8,14 +8,16 @@ class AbstractCreditFacility(ABC):
     def __init__(self) -> None:
         super().__init__()
         self.used_credit = defaultdict(list)
+        self.history = defaultdict(list)
         
-    def collect_all_repayment(self, accounts: list[Account]) -> None:
+    def collect_all_repayment(self, day: int, accounts: list[Account]) -> None:
         """
         Collect all repayment of a list of accounts.
 
         :param accounts: List of participants' account
         """
         for account in accounts:
+            self.history[account.id].append((day, self.get_total_credit(account), self.get_total_fee(account)))
             self.collect_repayment(account=account)
             
     @abstractmethod
