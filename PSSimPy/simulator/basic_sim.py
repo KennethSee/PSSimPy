@@ -15,6 +15,7 @@ from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
 from PSSimPy.utils.account_utils import load_account_with_transactions
+from PSSimPy.utils.transaction_utils import settle_transaction
 
 
 class BasicSim:
@@ -35,6 +36,8 @@ class BasicSim:
                  transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
                  transaction_fee_rate: Union[float, Dict[str, float]] = 0.0,
                  bank_failure: Dict[int, List[Tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
+                 eod_clear_queue: bool = False,
+                 eod_force_settlement: bool = False
                  ):
         
         if not (is_valid_24h_time(open_time) and is_valid_24h_time(close_time)):
@@ -51,6 +54,8 @@ class BasicSim:
         self.transaction_fee_handler = transaction_fee_handler
         self.transaction_fee_rate = transaction_fee_rate
         self.bank_failure = bank_failure
+        self.eod_clear_queue = eod_clear_queue
+        self.eod_force_settlement = eod_force_settlement
         
         # load data
         if isinstance(banks, pd.DataFrame):
@@ -125,7 +130,7 @@ class BasicSim:
             transaction_fees = [(transaction.sender_account.id, day, current_time_str, self.transaction_fee_handler.calculate_fee(transaction.amount, current_time_str, self.transaction_fee_rate)) 
                                 for transaction in processed_transactions['Processed']]
             
-            # 5. processed transactions printed to log
+            # 4. processed transactions printed to log
             # -> transaction log
             transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions}
             transactions_to_log.update(txns_failed_from_bank_failure) # add the failed transactions due to bank failure
@@ -142,8 +147,46 @@ class BasicSim:
                 for account in self.accounts.values()
             ])
             
-            yield self.env.timeout(self.processing_window)       
-    
+            yield self.env.timeout(self.processing_window)
+
+    def _perform_eod(self, day: int = 1):
+            processed_transactions = []
+            transaction_fees = []
+
+            # 1. credit facility repayment
+            self.credit_facility.collect_all_repayment(day, self.accounts.values())
+            
+            # 2. remove all transactions from queue if appropriate
+            if self.eod_clear_queue or self.eod_force_settlement: 
+                for txn, priority in self.queue.queue:
+                    self.queue.dequeue((txn, priority))
+
+                    # 3. forced unsettled transactions regardless constraints if appropriate            
+                    if self.eod_force_settlement:
+                        settle_transaction(txn)
+                        processed_transactions.append(txn)
+                        transaction_fees.append((txn.sender_account.id,
+                                                 day,
+                                                 self.close_time,
+                                                 self.transaction_fee_handler.calculate_fee(txn.amount,
+                                                                                            self.close_time,
+                                                                                            self.transaction_fee_rate)))
+
+            # 4. print logs
+            # -> transaction log
+            self.transaction_logger.write(self._extract_logging_details(processed_transactions, day, self.close_time)) 
+            # -> queueu statistics log
+            self.queue_stats_logger.write([(day, self.close_time, self.queue.get_num_txns(), self.queue.get_txn_amount_total())])
+            # -> transaction fees log
+            self.transaction_fee_logger.write(transaction_fees)
+            # -> account balance statistics log
+            self.account_balance_logger.write([(day, self.close_time, account.id, account.balance) for account in self.accounts.values()])
+            # -> credit facility usage log
+            self.credit_facility_logger.write([
+                (day, self.close_time, account.id, account.posted_collateral, self.credit_facility.get_total_credit(account), self.credit_facility.get_total_fee(account))
+                for account in self.accounts.values()
+            ])
+
     def run(self):
         """Main function that executes the simulation"""
         # repeate simulation for each day
@@ -151,9 +194,8 @@ class BasicSim:
             self.env = simpy.Environment()
             self.env.process(self._simulate_day(i+1))
             self.env.run(until=minutes_between(self.open_time, self.close_time))
-            self.credit_facility.collect_all_repayment(i, self.accounts.values())
-            # TODO EOD handling - not implemented for now
-            
+            self._perform_eod(i+1)
+
     @staticmethod
     def _gather_transactions_in_window(day: int, begin_time: str, end_time: str, transactions_set: Set[Tuple[Transaction, int, str]]) -> Set[Transaction]:
         gathered_transactions = set()
