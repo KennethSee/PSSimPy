@@ -15,36 +15,37 @@ class TestSimpleCollateralizedCreditFacility(unittest.TestCase):
         self.cf_collateralized.lend_credit(self.a, 100)
         self.assertEqual(self.cf_collateralized.get_total_credit(self.a), 100)
         self.assertEqual(self.cf_collateralized.get_total_fee(self.a), 0)
+        self.assertEqual(self.a.posted_collateral, 50)
         self.assertEqual(self.a.balance, 200)
 
         # lend 100 credit to A, but failed due to insufficient collateral
         self.cf_collateralized.lend_credit(self.a, 100)
         self.assertEqual(self.cf_collateralized.get_total_credit(self.a), 100)
         self.assertEqual(self.cf_collateralized.get_total_fee(self.a), 0)
+        self.assertEqual(self.a.posted_collateral, 50)
         self.assertEqual(self.a.balance, 200)
 
         
-    def test_collect(self):
-        pass
-    
-        # TODO use these tests after implementing EOD        
+    def test_collect(self):     
         # lend 100 credit to A, repaid with full amount
         self.cf_collateralized.lend_credit(self.a, 100)
         self.cf_collateralized.collect_repayment(self.a)
         self.assertEqual(self.cf_collateralized.get_total_credit(self.a), 0)
         self.assertEqual(self.cf_collateralized.get_total_fee(self.a), 0)
-        self.assertEqual(self.a.balance, 200)
-        
-        # A has 100, lend 130 credit to A, A use 120, cannot repaid 20
-        self.cf_collateralized.lend_credit(self.a, 100)
-        self.cf_collateralized.lend_credit(self.a, 10)
-        self.cf_collateralized.lend_credit(self.a, 15)
-        self.cf_collateralized.lend_credit(self.a, 5)
-        self.a.balance -= 120
-        self.cf_collateralized.collect_repayment(self.a)
-        self.assertEqual(self.cf_collateralized.get_total_credit(self.a), 0)
-        self.assertEqual(self.cf_collateralized.get_total_fee(self.a), 0)
         self.assertEqual(self.a.posted_collateral, 150)
+        self.assertEqual(self.a.balance, 100)
+        
+        # A has 100, lend 130 credit in total to A, A use 120, cannot repaid some
+        self.cf_collateralized.lend_credit(self.a, 100) # balance is 100 + 100
+        self.cf_collateralized.lend_credit(self.a, 10) # balance is 200 + 10
+        self.cf_collateralized.lend_credit(self.a, 15) # balance is 210 + 15
+        self.cf_collateralized.lend_credit(self.a, 5) # balance is 225 + 5
+        self.a.balance -= 120 # balance is 230 - 120
+        self.cf_collateralized.collect_repayment(self.a) # balance is 110 - 100 - 10
+        self.assertEqual(self.cf_collateralized.get_total_credit(self.a), 20)
+        self.assertEqual(self.cf_collateralized.get_total_fee(self.a), 0)
+        self.assertEqual(self.a.posted_collateral, 130)
+        self.assertEqual(self.a.balance, 0)
 
 
 
