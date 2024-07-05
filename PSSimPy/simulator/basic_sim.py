@@ -161,7 +161,7 @@ class BasicSim:
                 for txn, priority in self.queue.queue:
                     self.queue.dequeue((txn, priority))
 
-                    # 3. forced unsettled transactions regardless constraints if appropriate            
+                    # 3a. forced unsettled transactions regardless constraints if appropriate            
                     if self.eod_force_settlement:
                         settle_transaction(txn)
                         processed_transactions.append(txn)
@@ -171,6 +171,9 @@ class BasicSim:
                                                  self.transaction_fee_handler.calculate_fee(txn.amount,
                                                                                             self.close_time,
                                                                                             self.transaction_fee_rate)))
+                    # 3b. dequeued transactions cancelled
+                    else:
+                        txn.update_transaction_status('Failed')
 
             # 4. print logs
             # -> transaction log
