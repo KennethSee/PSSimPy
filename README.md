@@ -164,6 +164,8 @@ The `BasicSim` class supports basic simulation functionalities for modeling paym
 | `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | A handler to calculate and apply transaction fees based on a given rate. |
 | `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate(s) at which transaction fees are calculated                        |
 | `bank_failure`            | `Dict[int, List[Tuple[str, str]]]` (optional)                 | Days and times when particular banks are set to fail during the simulation. |
+| `eod_clear_queue`         | `bool` (default: False)                                       | Option to cancel all transactions still in queue at EOD.                    |
+| `eod_force_settlement`    | `bool` (default: False)                                       | Option to force all outstanding transactions in queue to settle at EOD.     |
 
 **Methods**
 
@@ -194,6 +196,8 @@ The `ABMSim` class is similar to the `BasicSim` class, but with a specific purpo
 | `transaction_fee_handler` | `AbstractTransactionFee` (default: `FixedTransactionFee()`)   | A handler to calculate and apply transaction fees based on a given rate. |
 | `transaction_fee_rate`    | `Union[float, Dict[str, float]]` (default: 0.0)               | The rate(s) at which transaction fees are calculated                        |
 | `bank_failure`            | `Dict[int, List[Tuple[str, str]]]` (optional)                 | Days and times when particular banks are set to fail during the simulation. |
+| `eod_clear_queue`         | `bool` (default: False)                                       | Option to cancel all transactions still in queue at EOD.                    |
+| `eod_force_settlement`    | `bool` (default: False)                                       | Option to force all outstanding transactions inside and outside queue to settle at EOD.     |
 | `txn_arrival_prob`        | `float` (optional)                                            | The probability that a transaction between two accounts occurs in a period. |
 | `txn_amount_range`        | `Tuple[int, int]` (optional)                                  | The range of values a generated transaction could have.                     |
 | `txn_priority_range`      | `Tuple[int, int]` (default: (1, 1))                           | The range of values a generated transaction's priority could have.          |
