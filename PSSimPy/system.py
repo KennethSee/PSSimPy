@@ -1,3 +1,5 @@
+from typing import Set
+
 from PSSimPy.transaction import Transaction
 from PSSimPy.constraint_handler.abstract_constraint_handler import AbstractConstraintHandler
 from PSSimPy.queues.abstract_queue import AbstractQueue
@@ -10,7 +12,7 @@ class System:
         self.constraint_handler = constraint_handler
         self.queue = queue
 
-    def process(self, transactions: set[Transaction]) -> dict:
+    def process(self, transactions: Set[Transaction]) -> dict:
         txns_to_queue = set()
         # send each transaction into the constraint handler
         for transaction in transactions:

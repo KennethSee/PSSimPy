@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from typing import List
 
 from PSSimPy.account import Account
 
@@ -10,7 +11,7 @@ class AbstractCreditFacility(ABC):
         self.used_credit = defaultdict(list)
         self.history = defaultdict(list)
         
-    def collect_all_repayment(self, day: int, accounts: list[Account]) -> None:
+    def collect_all_repayment(self, day: int, accounts: List[Account]) -> None:
         """
         Collect all repayment of a list of accounts.
 

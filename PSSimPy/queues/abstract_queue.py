@@ -1,4 +1,4 @@
-from typing import Tuple, List
+from typing import Tuple, List, Set
 from PSSimPy.transaction import Transaction
 from abc import ABC, abstractmethod
 from sortedcontainers import SortedList
@@ -37,7 +37,7 @@ class AbstractQueue(ABC):
     def enqueue(self, transaction: Transaction) -> None:
         self.queue.add((transaction, self.period_counter))
 
-    def bulk_enqueue(self, transactions: set[Transaction]) -> None:
+    def bulk_enqueue(self, transactions: Set[Transaction]) -> None:
         for transaction in transactions:
             self.enqueue(transaction)
     

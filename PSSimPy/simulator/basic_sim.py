@@ -77,7 +77,7 @@ class BasicSim:
         self.account_balance_logger = Logger(logger_file_name(name, 'account_balance'), ACCOUNT_BALANCE_HEADER)
         self.credit_facility_logger = Logger(logger_file_name(name, 'credit_facility'), CREDIT_FACILITY_LOGGER_HEADER)
         
-    def _load_initial_data(self, banks_dict: dict[list], accounts_dict: dict[list], transactions_dict: dict[list]) -> None:
+    def _load_initial_data(self, banks_dict: dict, accounts_dict: dict, transactions_dict: dict) -> None:
         # load banks
         bank_list = initialize_classes_from_dict(Bank, banks_dict)
         self.banks = {bank.name: bank for bank in bank_list}
