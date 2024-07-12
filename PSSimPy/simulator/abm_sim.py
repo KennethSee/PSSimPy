@@ -19,6 +19,7 @@ from PSSimPy.utils.time_utils import is_valid_24h_time, add_minutes_to_time, is_
 from PSSimPy.utils.file_utils import logger_file_name
 from PSSimPy.utils.data_utils import initialize_classes_from_dict
 from PSSimPy.utils.account_utils import load_account_with_transactions
+from PSSimPy.utils.transaction_utils import settle_transaction
 
 class ABMSim:
     """Simulator that supports Agent-Based Modeling"""
@@ -39,6 +40,8 @@ class ABMSim:
                  transaction_fee_handler: AbstractTransactionFee = FixedTransactionFee(),
                  transaction_fee_rate: Union[float, Dict[str, float]] = 0.0,
                  bank_failure: Dict[int, List[Tuple[str, str]]] = None, # key is day and value is a tuple of time and bank name
+                 eod_clear_queue: bool = False,
+                 eod_force_settlement: bool = False,
                  txn_arrival_prob: float = None, # only required if transactions are not provided
                  txn_amount_range: Tuple[int, int] = None, # only required if transactions are not provide
                  txn_priority_range: Tuple[int, int] = (1, 1)
@@ -64,6 +67,8 @@ class ABMSim:
         self.transaction_fee_handler = transaction_fee_handler
         self.transaction_fee_rate = transaction_fee_rate
         self.bank_failure = bank_failure
+        self.eod_clear_queue = eod_clear_queue
+        self.eod_force_settlement = eod_force_settlement
         self.txn_arrival_prob = txn_arrival_prob
         self.txn_amount_range = txn_amount_range
         self.txn_priority_range = txn_priority_range
@@ -106,6 +111,58 @@ class ABMSim:
         transactions_list_with_time = [(transaction, transaction.day, transaction.time) for transaction in transactions_list]
         self.transactions = set(transactions_list_with_time)
 
+    def _perform_eod(self, day: int = 1):
+            processed_transactions = []
+            transaction_fees = []
+
+            # 1. credit facility repayment
+            self.credit_facility.collect_all_repayment(day, self.accounts.values())
+            
+            # 2. remove all transactions from queue if appropriate
+            # TO-DO: Update the txns of queued AND outstanding transactions to cancelled
+            if self.eod_clear_queue or self.eod_force_settlement: 
+                # 3. force the system to process all outstanding transactions if eod_force_settlement flag is set
+                if self.eod_force_settlement:
+                    eod_processed_transactions = self.system.process(self.outstanding_transactions)
+                    self.outstanding_transactions = set() # clear outstanding
+
+                for txn, priority in self.queue.queue:
+                    self.queue.dequeue((txn, priority))
+
+                    # 4a. forced unsettled transactions regardless constraints if appropriate            
+                    if self.eod_force_settlement:
+                        settle_transaction(txn)
+                        processed_transactions.append(txn)
+                        transaction_fees.append((txn.sender_account.id,
+                                                 day,
+                                                 self.close_time,
+                                                 self.transaction_fee_handler.calculate_fee(txn.amount,
+                                                                                            self.close_time,
+                                                                                            self.transaction_fee_rate)))
+                    # 4b. dequeued transactions cancelled
+                    else:
+                        txn.update_transaction_status('Failed')
+
+            # 5. any remaining outstanding transactions will need to be updated to be picked up the next day
+            for txn in self.outstanding_transactions:
+                txn.time = self.open_time
+                txn.day += 1
+
+            # 6. print logs
+            # -> transaction log
+            self.transaction_logger.write(self._extract_logging_details(processed_transactions, day, self.close_time)) 
+            # -> queueu statistics log
+            self.queue_stats_logger.write([(day, self.close_time, self.queue.get_num_txns(), self.queue.get_txn_amount_total())])
+            # -> transaction fees log
+            self.transaction_fee_logger.write(transaction_fees)
+            # -> account balance statistics log
+            self.account_balance_logger.write([(day, self.close_time, account.id, account.balance) for account in self.accounts.values()])
+            # -> credit facility usage log
+            self.credit_facility_logger.write([
+                (day, self.close_time, account.id, account.posted_collateral, self.credit_facility.get_total_credit(account), self.credit_facility.get_total_fee(account))
+                for account in self.accounts.values()
+            ])
+
     def run(self):
         """Main function that executes the simulation"""
         # repeate simulation for each day
@@ -113,8 +170,8 @@ class ABMSim:
             self.env = simpy.Environment()
             self.env.process(self._simulate_day(i+1))
             self.env.run(until=minutes_between(self.open_time, self.close_time))
-            self.credit_facility.collect_all_repayment(self.accounts.values())
-            # EOD handling - not implemented for now
+            # EOD handling
+            self._perform_eod(i+1)
         # logging
         # Transactions arrival - only if transactions are generated by the simulation
         if self.generate_txns_flag == 1:
