@@ -1,11 +1,126 @@
 import os
+import copy
 import unittest
 import pandas as pd
 
 import PSSimPy
 from PSSimPy.credit_facilities import SimplePriced, SimpleCollateralized
+from PSSimPy.queues import PriorityQueue, FIFOQueue
 from PSSimPy.simulator import BasicSim
 from PSSimPy.utils import is_valid_24h_time
+
+
+class TestBasicSimMultipleDays(unittest.TestCase):
+    def setUp(self) -> None:
+        self.sim_ids = ["Base", "EOD-1", "EOD-2"]
+        
+        self.output_log_paths = []
+        self.output_log_paths.extend([f'{id}-processed_transactions.csv' for id in self.sim_ids])
+        self.output_log_paths.extend([f'{id}-transaction_fees.csv' for id in self.sim_ids])
+        self.output_log_paths.extend([f'{id}-queue_stats.csv' for id in self.sim_ids])
+        self.output_log_paths.extend([f'{id}-account_balance.csv' for id in self.sim_ids])
+        self.output_log_paths.extend([f'{id}-credit_facility.csv' for id in self.sim_ids])
+
+        self.banks = {'name': ['b1', 'b2', 'b3'], 'bank_code': ['ABC', 'KLM', 'XYZ']}
+
+        self.accounts = pd.DataFrame([
+            {'id': 'acc1', 'owner': 'b1', 'balance': 50, 'posted_collateral': 0},
+            {'id': 'acc2', 'owner': 'b2', 'balance': 50, 'posted_collateral': 0},
+            {'id': 'acc3', 'owner': 'b3', 'balance': 50, 'posted_collateral': 0},
+        ])
+
+        self.transactions = pd.DataFrame([
+            {'sender_account': 'acc1', 'recipient_account': 'acc2', 'amount': 100, 'day':1, 'time': '08:30'},
+            {'sender_account': 'acc2', 'recipient_account': 'acc3', 'amount': 100, 'day':1, 'time': '09:00'},
+            {'sender_account': 'acc3', 'recipient_account': 'acc1', 'amount': 100, 'day':1, 'time': '09:30'},
+            {'sender_account': 'acc1', 'recipient_account': 'acc2', 'amount': 200, 'day':2, 'time': '08:30'},
+            {'sender_account': 'acc2', 'recipient_account': 'acc3', 'amount': 200, 'day':2, 'time': '09:00'},
+            {'sender_account': 'acc3', 'recipient_account': 'acc1', 'amount': 200, 'day':2, 'time': '09:30'},
+            {'sender_account': 'acc1', 'recipient_account': 'acc2', 'amount': 300, 'day':3, 'time': '08:30'},
+            {'sender_account': 'acc2', 'recipient_account': 'acc3', 'amount': 300, 'day':3, 'time': '09:00'},
+            {'sender_account': 'acc3', 'recipient_account': 'acc1', 'amount': 300, 'day':3, 'time': '09:30'},
+        ])
+
+    def setup_params(self, queue, credit_facility, eod_clear_queue = False, eod_force_settlement = False):
+        params = {
+            "open_time": '08:00',
+            "close_time": '10:00',
+            "num_days": 3,
+            "banks": copy.deepcopy(self.banks),
+            "accounts": (self.accounts).copy(),
+            "transactions": (self.transactions).copy(),
+            "queue": queue,
+            "credit_facility": credit_facility,
+            "eod_clear_queue": eod_clear_queue,
+            "eod_force_settlement": eod_force_settlement,
+        }
+        return params
+        
+    def tearDown(self):
+        for path in self.output_log_paths:
+            if os.path.exists(path): os.remove(path)
+
+    def test_run_fifo_queue(self):
+        # setup parameters for sim with NO EOD
+        params = self.setup_params(FIFOQueue(), SimpleCollateralized())
+        self.sim_base = BasicSim(self.sim_ids[0], **params)
+
+        # setup parameters for sim with CLEAR QUEUE EOD
+        params = self.setup_params(FIFOQueue(), SimpleCollateralized(), True, False)
+        self.sim_setting_1 = BasicSim(self.sim_ids[1], **params)
+
+        # setup parameters for sim with FORCE SETTLEMENT EOD
+        params = self.setup_params(FIFOQueue(), SimpleCollateralized(), True, True)
+        self.sim_setting_2 = BasicSim(self.sim_ids[2], **params)
+
+        # run all simulation settings
+        self.sim_base.run()
+        self.sim_setting_1.run()
+        self.sim_setting_2.run()
+
+        # assert the number of queue at the end of simulation
+        self.assertEqual(len(self.sim_base.queue.queue), 9)
+        self.assertEqual(len(self.sim_setting_1.queue.queue), 0)
+        self.assertEqual(len(self.sim_setting_2.queue.queue), 0)
+
+        # assert transaction status code (0 for not settled/queued, -1 for rejected, 2 for settled)
+        self.assertEqual(sum([trx[0].status_code for trx in self.sim_base.transactions]), 0)
+        self.assertEqual(sum([trx[0].status_code for trx in self.sim_setting_1.transactions]), -9)
+        self.assertEqual(sum([trx[0].status_code for trx in self.sim_setting_2.transactions]), 18)
+
+    def test_run_priority_queue(self):
+        for path in self.output_log_paths:
+            if os.path.exists(path):
+                os.remove(path)
+
+        # setup parameters for sim with NO EOD
+        params = self.setup_params(PriorityQueue(), SimpleCollateralized())
+        self.sim_base = BasicSim(self.sim_ids[0], **params)
+
+        # setup parameters for sim with CLEAR QUEUE EOD
+        params = self.setup_params(PriorityQueue(), SimpleCollateralized(), True, False)
+        self.sim_setting_1 = BasicSim(self.sim_ids[1], **params)
+
+        # setup parameters for sim with FORCE SETTLEMENT EOD
+        params = self.setup_params(PriorityQueue(), SimpleCollateralized(), True, True)
+        self.sim_setting_2 = BasicSim(self.sim_ids[2], **params)
+
+        # run all simulation settings
+        self.sim_base.run()
+        self.sim_setting_1.run()
+        self.sim_setting_2.run()
+
+        # assert the number of queue at the end of simulation
+        self.assertEqual(len(self.sim_base.queue.queue), 9)
+        self.assertEqual(len(self.sim_setting_1.queue.queue), 0)
+        self.assertEqual(len(self.sim_setting_2.queue.queue), 0)
+
+        # assert transaction status code (0 for not settled/queued, -1 for rejected, 2 for settled)
+        self.assertEqual(sum([trx[0].status_code for trx in self.sim_base.transactions]), 0)
+        self.assertEqual(sum([trx[0].status_code for trx in self.sim_setting_1.transactions]), -9)
+        self.assertEqual(sum([trx[0].status_code for trx in self.sim_setting_2.transactions]), 18)
+
+
 
 class TestBasicSim(unittest.TestCase):
     def setUp(self) -> None:
@@ -98,9 +213,9 @@ class TestBasicSim(unittest.TestCase):
         self.assertEqual(self.sim.credit_facility.used_credit['acc3'], [])
 
         # history of credit facility
-        self.assertEqual(self.sim.credit_facility.history['acc1'], [(0, 50.+110., (50*1.5+10)+(110*1.5+10))])
-        self.assertEqual(self.sim.credit_facility.history['acc2'], [(0, 0, 0)])
-        self.assertEqual(self.sim.credit_facility.history['acc3'], [(0, 0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc1'], [(1, 50.+110., (50*1.5+10)+(110*1.5+10))])
+        self.assertEqual(self.sim.credit_facility.history['acc2'], [(1, 0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc3'], [(1, 0, 0)])
         
     def test_run_simple_collateralized(self):
         # reset credit facility as it doesn't reset after simulation in other test cases
@@ -124,9 +239,9 @@ class TestBasicSim(unittest.TestCase):
         self.assertEqual(self.sim.credit_facility.used_credit['acc3'], [])
 
         # history of credit facility
-        self.assertEqual(self.sim.credit_facility.history['acc1'], [(0, 50.0, 0)])
-        self.assertEqual(self.sim.credit_facility.history['acc2'], [(0, 0, 0)])
-        self.assertEqual(self.sim.credit_facility.history['acc3'], [(0, 0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc1'], [(1, 50.0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc2'], [(1, 0, 0)])
+        self.assertEqual(self.sim.credit_facility.history['acc3'], [(1, 0, 0)])
     
     def test_logger(self):
         self.tearDown()

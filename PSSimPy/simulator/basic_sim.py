@@ -158,7 +158,7 @@ class BasicSim:
             
             # 2. remove all transactions from queue if appropriate
             if self.eod_clear_queue or self.eod_force_settlement: 
-                for txn, priority in self.queue.queue:
+                for txn, priority in list(self.queue.queue):
                     self.queue.dequeue((txn, priority))
 
                     # 3a. forced unsettled transactions regardless constraints if appropriate            
