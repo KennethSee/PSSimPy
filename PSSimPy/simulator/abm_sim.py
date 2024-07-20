@@ -118,15 +118,14 @@ class ABMSim:
             # 1. credit facility repayment
             self.credit_facility.collect_all_repayment(day, self.accounts.values())
             
-            # 2. remove all transactions from queue if appropriate
-            # TO-DO: Update the txns of queued AND outstanding transactions to cancelled
             if self.eod_clear_queue or self.eod_force_settlement: 
-                # 3. force the system to process all outstanding transactions if eod_force_settlement flag is set
+                # 2. force the system to process all outstanding transactions if eod_force_settlement flag is set
                 if self.eod_force_settlement:
                     eod_processed_transactions = self.system.process(self.outstanding_transactions)
                     self.outstanding_transactions = set() # clear outstanding
 
-                for txn, priority in self.queue.queue:
+                # 3. remove all transactions from queue if appropriate
+                for txn, priority in list(self.queue.queue):
                     self.queue.dequeue((txn, priority))
 
                     # 4a. forced unsettled transactions regardless constraints if appropriate            
