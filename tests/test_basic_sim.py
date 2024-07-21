@@ -268,3 +268,6 @@ class TestBasicSim(unittest.TestCase):
         acc = pd.read_csv(self.output_log_paths['accounts'])
         self.assertListEqual(acc[acc['time'] == '08:00']['balance'].tolist(), [200.0, 750.0, 1000.0])
         self.assertListEqual(acc[acc['time'] == '11:45']['balance'].tolist(), [0.0, 900.0, 1210.0])
+
+if __name__ == '__main__':
+    unittest.main()
