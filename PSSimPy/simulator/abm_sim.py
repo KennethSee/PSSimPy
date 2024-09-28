@@ -131,6 +131,8 @@ class ABMSim:
                     # 4a. forced unsettled transactions regardless constraints if appropriate            
                     if self.eod_force_settlement:
                         settle_transaction(txn)
+                        txn.settle_day = day
+                        txn.settle_time = self.close_time
                         processed_transactions.append(txn)
                         transaction_fees.append((txn.sender_account.id,
                                                  day,
@@ -233,6 +235,10 @@ class ABMSim:
                     self.credit_facility.lend_credit(acc, credit_amount)
             # 4. identified transactions to be settled sent into System to be processed
             processed_transactions = self.system.process(transactions_to_settle)
+            # update the settlement time information for processed transactions
+            for processed_transaction in processed_transactions['Processed']:
+                processed_transaction.settle_day = day
+                processed_transaction.settle_time = current_time_str
             transactions_to_log = {transaction for transactions in processed_transactions.values() for transaction in transactions} # merge the settled and failed transactions
             transactions_to_log.update(txns_failed_from_bank_failure) # add the failed transactions due to bank failure
 
