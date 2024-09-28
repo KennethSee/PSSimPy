@@ -125,7 +125,11 @@ class BasicSim:
                     self.credit_facility.lend_credit(acc, credit_amount)
             
             # 3. outstanding transactions to be settled sent into System to be processed
-            processed_transactions = self.system.process(curr_period_transactions)
+            processed_transactions = self.system.process(curr_period_transactions, day, current_time_str)
+            # update the settlement time information for processed transactions
+            for processed_transaction in processed_transactions['Processed']:
+                processed_transaction.settle_day = day
+                processed_transaction.settle_time = current_time_str
             # -> calculate transaction fees
             transaction_fees = [(transaction.sender_account.id, day, current_time_str, self.transaction_fee_handler.calculate_fee(transaction.amount, current_time_str, self.transaction_fee_rate)) 
                                 for transaction in processed_transactions['Processed']]
@@ -164,6 +168,8 @@ class BasicSim:
                     # 3a. forced unsettled transactions regardless constraints if appropriate            
                     if self.eod_force_settlement:
                         settle_transaction(txn)
+                        txn.settle_day = day
+                        txn.settle_time = self.close_time
                         processed_transactions.append(txn)
                         transaction_fees.append((txn.sender_account.id,
                                                  day,
