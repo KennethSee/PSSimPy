@@ -28,6 +28,9 @@ class Transaction:
             setattr(self, key, value)
         # set default value for day
         self.day = kwargs.get('day', 1)
+        # set default value for settle day and time
+        self.settle_day = kwargs.get('settle_day', None)
+        self.settle_time = kwargs.get('settle_time', None)
 
     def update_transaction_status(self, status: str):
         try:
