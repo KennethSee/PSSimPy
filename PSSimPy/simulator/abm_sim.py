@@ -121,7 +121,7 @@ class ABMSim:
             if self.eod_clear_queue or self.eod_force_settlement: 
                 # 2. force the system to process all outstanding transactions if eod_force_settlement flag is set
                 if self.eod_force_settlement:
-                    eod_processed_transactions = self.system.process(self.outstanding_transactions)
+                    eod_processed_transactions = self.system.process(self.outstanding_transactions, day, self.close_time)
                     self.outstanding_transactions = set() # clear outstanding
 
                 # 3. remove all transactions from queue if appropriate
@@ -234,7 +234,7 @@ class ABMSim:
                 if credit_amount > 0:
                     self.credit_facility.lend_credit(acc, credit_amount)
             # 4. identified transactions to be settled sent into System to be processed
-            processed_transactions = self.system.process(transactions_to_settle)
+            processed_transactions = self.system.process(transactions_to_settle, day, current_time_str)
             # update the settlement time information for processed transactions
             for processed_transaction in processed_transactions['Processed']:
                 processed_transaction.settle_day = day

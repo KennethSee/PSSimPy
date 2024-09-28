@@ -6,7 +6,7 @@ import pandas as pd
 import PSSimPy
 from PSSimPy import Bank
 from PSSimPy.credit_facilities import SimplePriced, SimpleCollateralized
-from PSSimPy.queues import PriorityQueue, FIFOQueue
+from PSSimPy.queues import FIFOQueue, AbstractQueue
 from PSSimPy.simulator import ABMSim
 from PSSimPy.utils import is_valid_24h_time
 
@@ -19,6 +19,24 @@ class CautiousBank(Bank):
     # overwrite strategy
     def strategy(self, txns_to_settle: set, all_outstanding_transactions: set, sim_name: str, day: int, current_time: str, queue) -> set:
         return {txn for txn in txns_to_settle if txn.time != current_time}
+    
+
+class DelayedQueue(AbstractQueue):
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def sorting_logic(queue_item) -> int:
+        _, period = queue_item
+        return period
+        
+    @staticmethod
+    def dequeue_criteria(queue_item) -> bool:
+        if queue_item[0].priority == 1:
+            queue_item[0].priority = 2
+            return False
+        else:
+            return True
     
 
 class TestTransactionSettleInfo(unittest.TestCase):
@@ -84,6 +102,30 @@ class TestTransactionSettleInfo(unittest.TestCase):
             self.assertNotEqual(txn.time, txn.settle_time)
             self.assertEqual(txn.day, txn.settle_day)
             self.assertEqual('08:15', txn.settle_time)
+
+    def test_no_queue_delay(self):
+        banks = copy.deepcopy(self.banks)
+        banks['strategy_type'] = ['Standard', 'Standard']
+        params = self.setup_params(banks, FIFOQueue(), SimpleCollateralized())
+        sim = ABMSim(self.sim_ids[0], **params)
+
+        sim.run()
+        for txn, _, _ in sim.transactions:
+            self.assertEqual(txn.submission_time, txn.settle_time)
+            self.assertEqual(txn.submission_day, txn.settle_day)
+
+    def test_queue_delay(self):
+        banks = copy.deepcopy(self.banks)
+        banks['strategy_type'] = ['Standard', 'Standard']
+        params = self.setup_params(banks, DelayedQueue(), SimpleCollateralized())
+        sim = ABMSim(self.sim_ids[0], **params)
+
+        sim.run()
+        for txn, _, _ in sim.transactions:
+            self.assertNotEqual(txn.submission_time, txn.settle_time)
+            self.assertEqual(txn.submission_day, txn.settle_day)
+            self.assertEqual(txn.submission_time, '08:00')
+            self.assertEqual(txn.settle_time, '08:15')
 
 
 if __name__ == '__main__':

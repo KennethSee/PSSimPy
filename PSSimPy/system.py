@@ -12,10 +12,12 @@ class System:
         self.constraint_handler = constraint_handler
         self.queue = queue
 
-    def process(self, transactions: Set[Transaction]) -> dict:
+    def process(self, transactions: Set[Transaction], submission_day: int, submission_time: str) -> dict:
         txns_to_queue = set()
         # send each transaction into the constraint handler
         for transaction in transactions:
+            transaction.submission_day = submission_day
+            transaction.submission_time = submission_time
             self.constraint_handler.process_transaction(transaction)
             txns_to_queue.update(self.constraint_handler.get_passed_transactions())
         self.constraint_handler.clear()

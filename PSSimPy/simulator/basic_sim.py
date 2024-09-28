@@ -125,7 +125,7 @@ class BasicSim:
                     self.credit_facility.lend_credit(acc, credit_amount)
             
             # 3. outstanding transactions to be settled sent into System to be processed
-            processed_transactions = self.system.process(curr_period_transactions)
+            processed_transactions = self.system.process(curr_period_transactions, day, current_time_str)
             # update the settlement time information for processed transactions
             for processed_transaction in processed_transactions['Processed']:
                 processed_transaction.settle_day = day
