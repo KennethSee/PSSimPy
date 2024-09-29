@@ -28,7 +28,9 @@ class Transaction:
             setattr(self, key, value)
         # set default value for day
         self.day = kwargs.get('day', 1)
-        # set default value for settle day and time
+        # set default value for submission and settle day and time
+        self.submission_day = kwargs.get('submission_day', None)
+        self.submission_time = kwargs.get('submission_time', None)
         self.settle_day = kwargs.get('settle_day', None)
         self.settle_time = kwargs.get('settle_time', None)
 

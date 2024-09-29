@@ -280,7 +280,11 @@ class ABMSim:
                 transaction.sender_account.id,
                 transaction.recipient_account.id,
                 transaction.amount,
-                'Success' if transaction.status_code == TRANSACTION_STATUS_CODES['Success'] else 'Failed'
+                'Success' if transaction.status_code == TRANSACTION_STATUS_CODES['Success'] else 'Failed',
+                transaction.submission_day,
+                transaction.submission_time,
+                transaction.settle_day,
+                transaction.settle_time
             )
             for transaction in transactions
         ]
