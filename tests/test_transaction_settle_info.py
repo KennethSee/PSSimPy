@@ -42,7 +42,7 @@ class DelayedQueue(AbstractQueue):
 class TestTransactionSettleInfo(unittest.TestCase):
 
     def setUp(self):
-        self.sim_ids = ["WithoutDelay", "WithDelay"]
+        self.sim_ids = ["WithoutDelay", "WithDelay", "WithDelayRandomTxns", "NoQueueDelay", "QueueDelay"]
         
         self.output_log_paths = []
         self.output_log_paths.extend([f'{id}-processed_transactions.csv' for id in self.sim_ids])
@@ -99,15 +99,32 @@ class TestTransactionSettleInfo(unittest.TestCase):
 
         sim.run()
         for txn, _, _ in sim.transactions:
-            self.assertNotEqual(txn.time, txn.settle_time)
-            self.assertEqual(txn.day, txn.settle_day)
+            self.assertNotEqual(txn.arrival_time, txn.settle_time)
+            self.assertEqual(txn.arrival_day, txn.settle_day)
             self.assertEqual('08:15', txn.settle_time)
+
+    def test_with_delay_random_txn(self):
+        banks = copy.deepcopy(self.banks)
+        banks['strategy_type'] = ['Cautious', 'Cautious']
+        params = self.setup_params(banks, FIFOQueue(), SimplePriced())
+        # replace transaction info
+        del  params['transactions']
+        params['txn_arrival_prob'] = 0.5
+        params['txn_amount_range'] = (1, 1)
+        params['num_days'] = 1
+        sim = ABMSim(self.sim_ids[2], **params)
+
+        sim.run()
+        for txn, _, _ in sim.transactions:
+            if txn.status_code == 2:
+                self.assertNotEqual(txn.arrival_time, txn.settle_time)
+                self.assertEqual(txn.arrival_day, txn.settle_day)
 
     def test_no_queue_delay(self):
         banks = copy.deepcopy(self.banks)
         banks['strategy_type'] = ['Standard', 'Standard']
         params = self.setup_params(banks, FIFOQueue(), SimpleCollateralized())
-        sim = ABMSim(self.sim_ids[0], **params)
+        sim = ABMSim(self.sim_ids[3], **params)
 
         sim.run()
         for txn, _, _ in sim.transactions:
@@ -117,8 +134,8 @@ class TestTransactionSettleInfo(unittest.TestCase):
     def test_queue_delay(self):
         banks = copy.deepcopy(self.banks)
         banks['strategy_type'] = ['Standard', 'Standard']
-        params = self.setup_params(banks, DelayedQueue(), SimpleCollateralized())
-        sim = ABMSim(self.sim_ids[0], **params)
+        params = self.setup_params(banks, DelayedQueue(), SimpleCollateralized(), eod_force_settlement=True)
+        sim = ABMSim(self.sim_ids[4], **params)
 
         sim.run()
         for txn, _, _ in sim.transactions:
@@ -126,7 +143,6 @@ class TestTransactionSettleInfo(unittest.TestCase):
             self.assertEqual(txn.submission_day, txn.settle_day)
             self.assertEqual(txn.submission_time, '08:00')
             self.assertEqual(txn.settle_time, '08:15')
-
 
 if __name__ == '__main__':
     unittest.main()

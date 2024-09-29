@@ -26,8 +26,11 @@ class Transaction:
         # Use the kwargs to store additional user-defined attributes
         for key, value in kwargs.items():
             setattr(self, key, value)
-        # set default value for day
+        # set default value for day and time
         self.day = kwargs.get('day', 1)
+        self.time = kwargs.get('time', None)
+        self.arrival_day = kwargs.get('day', 1)
+        self.arrival_time = kwargs.get('time', None)
         # set default value for submission and settle day and time
         self.submission_day = kwargs.get('submission_day', None)
         self.submission_time = kwargs.get('submission_time', None)

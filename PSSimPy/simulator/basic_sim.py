@@ -216,8 +216,8 @@ class BasicSim:
     @staticmethod
     def _extract_logging_details(transactions: Set[Transaction], day: int, time: str) -> List[Tuple]:
         return [(
-            day,
-            time,
+            transaction.arrival_day,
+            transaction.arrival_time,
             transaction.sender_account.id,
             transaction.recipient_account.id,
             transaction.amount,

@@ -196,12 +196,12 @@ class ABMSim:
                     if self._txn_arrival(): # account1 -> account2
                         rand_txn_amt = randint(self.txn_amount_range[0], self.txn_amount_range[1])
                         rand_priority = randint(self.txn_priority_range[0], self.txn_priority_range[1])
-                        new_txn = Transaction(self.accounts[account1_id], self.accounts[account2_id], rand_txn_amt, rand_priority, day=day)
+                        new_txn = Transaction(self.accounts[account1_id], self.accounts[account2_id], rand_txn_amt, rand_priority, day=day, time=current_time_str)
                         curr_period_transactions.add(new_txn)
                     if self._txn_arrival(): # account2 -> account1
                         rand_txn_amt = randint(self.txn_amount_range[0], self.txn_amount_range[1])
                         rand_priority = randint(self.txn_priority_range[0], self.txn_priority_range[1])
-                        new_txn = Transaction(self.accounts[account2_id], self.accounts[account1_id], rand_txn_amt, rand_priority, day=day)
+                        new_txn = Transaction(self.accounts[account2_id], self.accounts[account1_id], rand_txn_amt, rand_priority, day=day, time=current_time_str)
                         curr_period_transactions.add(new_txn)
                 # add created transactions to class transactions set
                 self.transactions.update({(transaction, day, current_time_str) for transaction in curr_period_transactions})
@@ -275,8 +275,8 @@ class ABMSim:
     def _extract_logging_details(transactions: Set[Transaction], day: int, time: str) -> List[Tuple]:
         return [
             (
-                day,
-                time,
+                transaction.arrival_day,
+                transaction.arrival_time,
                 transaction.sender_account.id,
                 transaction.recipient_account.id,
                 transaction.amount,
