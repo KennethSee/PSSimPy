@@ -21,6 +21,23 @@ PSSimPy is a Python library designed to simulate Large Value Payment Systems (LV
 
 This library is built with the flexibility to accommodate a wide range of simulation needs, catering to both academic researchers and industry/government analysts. Its modular architecture enables users to customize simulations to explore the intricacies of payment and settlement processes. This is a publicly available tool and we welcome any form of collaboration and feedback.
 
+### Citation
+
+We would appreciate it if you cited our paper if you have used PSSimPy in your research:
+
+>See, K., Shobri, H., & Garcia N. M. (2024). PSSimPy: a design science approach to constructing and implementing a large-value payment system simulator. _Proceedings of the Forty-Fifth International Conference on Information Systems_. Association for Information Systems.
+
+```BibTeX
+% BibTeX citation
+@InProceedings{...,
+  author = {See, Kenneth and Shobri, Hanzholah and Garcia, Nicholas MacGregor},
+  title = {PSSimPy: a design science approach to constructing and implementing a large-value payment system simulator},
+  booktitle = {Proceedings of the Forty-Fifth International Conference on Information Systems},
+  year = {2024},
+  publisher = {Association for Information Systems}
+}
+```
+
 ## Getting Started
 ```bash
 pip install PSSimPy
