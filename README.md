@@ -34,7 +34,8 @@ We would appreciate it if you cited our paper if you have used PSSimPy in your r
   title = {PSSimPy: a design science approach to constructing and implementing a large-value payment system simulator},
   booktitle = {Proceedings of the Forty-Fifth International Conference on Information Systems},
   year = {2024},
-  publisher = {Association for Information Systems}
+  publisher = {Association for Information Systems},
+  address = {Bangkok, Thailand}
 }
 ```
 
