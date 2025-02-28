@@ -123,6 +123,8 @@ class ABMSim:
                 if self.eod_force_settlement:
                     eod_processed_transactions = self.system.process(self.outstanding_transactions, day, self.close_time)
                     self.outstanding_transactions = set() # clear outstanding
+                    processed_transactions.extend(eod_processed_transactions['Processed'])
+                    processed_transactions.extend(eod_processed_transactions['Failed'])
 
                 # 3. remove all transactions from queue if appropriate
                 for txn, priority in list(self.queue.queue):
