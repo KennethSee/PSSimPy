@@ -29,7 +29,7 @@ We would appreciate it if you cited our paper if you have used PSSimPy in your r
 
 ```BibTeX
 % BibTeX citation
-@InProceedings{...,
+@InProceedings{See2024-pssimpy,
   author = {See, Kenneth and Shobri, Hanzholah and Garcia, Nicholas MacGregor},
   title = {PSSimPy: a design science approach to constructing and implementing a large-value payment system simulator},
   booktitle = {Proceedings of the Forty-Fifth International Conference on Information Systems},
