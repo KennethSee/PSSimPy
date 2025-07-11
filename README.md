@@ -23,7 +23,7 @@ This library is built with the flexibility to accommodate a wide range of simula
 
 ### Citation
 
-We would appreciate it if you cited our paper if you have used PSSimPy in your research:
+We would appreciate it if you cited [our paper](https://aisel.aisnet.org/icis2024/blockchain/blockchain/10/) if you have used PSSimPy in your research:
 
 >See, K., Shobri, H., & Garcia N. M. (2024). PSSimPy: a design science approach to constructing and implementing a large-value payment system simulator. _Proceedings of the Forty-Fifth International Conference on Information Systems_. Association for Information Systems.
 
